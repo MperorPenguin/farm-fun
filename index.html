@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
 <title>Farm Fun — Tap & Learn</title>
 <style>
   :root{
@@ -17,8 +18,12 @@
     --cloudMin: 32s; --cloudMax: 85s;
   }
 
-  html,body{height:100%;margin:0}
+  /* Viewport robustness for iOS Safari & rotation */
+  html, body { height: 100%; margin: 0; }
   body{
+    min-height: 100vh;
+    min-height: 100svh; /* iOS 15+ */
+    min-height: 100dvh; /* modern browsers */
     font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
     color:var(--ink);
     background:linear-gradient(180deg,var(--skyTop) 0 45%, var(--skyMid) 45% 60%, var(--fieldFar) 60% 100%);
@@ -85,7 +90,7 @@
                border-left:90px solid transparent; border-right:90px solid transparent; border-bottom:56px solid var(--wood);}
   .coop.duck{left:70vw}
 
-  /* Pop bubbles */
+  /* Pops */
   .pop{position:absolute; display:grid; place-items:center; width:1px; height:1px; transform:translate(-50%,-50%);}
   .bubble{
     display:grid; place-items:center; padding:26px 28px; border-radius:24px;
@@ -102,14 +107,14 @@
   .confetti{position:fixed; width:10px; height:10px; border-radius:50%; pointer-events:none;}
 
   /* HUD, gate, book */
-  .hud{position:fixed; left:50%; transform:translateX(-50%); bottom:2vh; z-index:9;
+  .hud{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(2vh + env(safe-area-inset-bottom, 0px)); z-index:9;
        display:flex; gap:10px; align-items:center; background:var(--panel);
        padding:12px 16px; border-radius:14px; backdrop-filter: blur(6px); pointer-events:auto}
-  .hud button, .hud .toggle{border:0; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700; box-shadow:0 4px 0 #00000014; background:#e5e7eb;}
+  .hud button, .hud .toggle{border:0; border-radius:10px; padding:12px 16px; cursor:pointer; font-weight:700; box-shadow:0 4px 0 #00000014; background:#e5e7eb;}
   .hud button.primary{background:#111827; color:white;}
   .label{font-size:12px; opacity:.8; margin-left:6px}
-  .range{appearance:none; height:8px; border-radius:6px; background:#e5e7eb; outline:none; width:140px;}
-  .range::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:#111827}
+  .range{appearance:none; height:10px; border-radius:6px; background:#e5e7eb; outline:none; width:140px;}
+  .range::-webkit-slider-thumb{appearance:none; width:20px; height:20px; border-radius:50%; background:#111827}
   .hint{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); font-size:clamp(18px,3.2vw,24px); background:var(--panel); padding:10px 14px; border-radius:12px; animation: pulse 2.2s ease-in-out infinite; box-shadow:0 8px 24px #0000001c; z-index:8;}
   @keyframes pulse{0%,100%{opacity:.6} 50%{opacity:1}}
   .gate{position:fixed; inset:0; display:grid; place-items:center; background:#0008; z-index:10}
@@ -118,16 +123,21 @@
   .big{font-size:clamp(20px,3.6vw,28px); padding:14px 18px; border-radius:12px}
 
   .book{position:fixed; inset:0; background:#0008; z-index:10; display:none; align-items:center; justify-content:center; pointer-events:auto;}
-  .book .sheet{background:white; width:min(900px,95vw); max-height:86vh; border-radius:20px; box-shadow:0 20px 60px #00000033; overflow:hidden; display:grid; grid-template-columns: 1fr 2fr; gap:0; position:relative;}
+  .book .sheet{background:white; width:min(900px,95vw); max-height:86svh; max-height:86dvh; border-radius:20px; box-shadow:0 20px 60px #00000033; overflow:hidden; display:grid; grid-template-columns: 1fr 2fr; gap:0; position:relative;}
   .book .left{background:#f9fafb; padding:18px; overflow:auto;}
-  .book .grid{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px;}
-  .book .tile{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px; border-radius:14px; background:#fff; box-shadow:0 6px 0 #0000000e; cursor:pointer; user-select:none; transition: transform .15s ease, box-shadow .15s ease, outline-color .15s ease;}
-  .book .tile .emo{font-size:42px; line-height:1} .book .tile .nm{font-weight:800; margin-top:6px;}
+  .book .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap:12px;}
+  .book .tile{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; border-radius:16px; background:#fff; box-shadow:0 6px 0 #0000000e; cursor:pointer; user-select:none; transition: transform .15s ease, box-shadow .15s ease, outline-color .15s ease;}
+  .book .tile .emo{font-size:44px; line-height:1} .book .tile .nm{font-weight:800; margin-top:6px; font-size:14px;}
   .book .tile:hover, .book .tile:focus-visible, .book .tile:active{ transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 0 #00000014, 0 0 0 3px #11182722 inset; outline: none;}
   .book .right{padding:22px; overflow:auto;}
   .book h2{margin:0 0 6px} .book p{margin:8px 0} .book ul{margin:8px 0 0 18px}
-  .book .close{position:absolute; top:14px; right:16px; border:0; background:#111827; color:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; box-shadow:0 4px 0 #00000020}
-  .book #bookMin{ right:100px; background:#374151; }
+  .book .close{position:absolute; top:14px; right:16px; border:0; background:#111827; color:#fff; border-radius:10px; padding:10px 12px; cursor:pointer; box-shadow:0 4px 0 #00000020}
+  .book #bookMin{ right:110px; background:#374151; }
+
+  @media (max-width: 560px){
+    .book .sheet{ grid-template-columns: 1fr; }
+    .book .right{ padding:18px 16px; }
+  }
 
   button:focus-visible, input:focus-visible{outline:3px solid #11182788; outline-offset:2px}
 </style>
@@ -191,7 +201,7 @@
     <p class="subtitle">Tap or press any key. Sounds max 3s; newest sound takes over. Touch = keypress.</p>
     <button id="startBtn" class="big">Start</button>
     <div class="tip" style="margin-top:10px; font-size:12px; opacity:.75">
-      Sounds live in <code>assets/sfx/&lt;animal&gt;/</code> and are listed in <code>assets/sfx/manifest.json</code>.
+      Sounds live in <code>assets/sfx/&lt;animal&gt;/</code>. Filenames like <code>cat_01.wav</code>, <code>cat_02.wav</code> work automatically.
     </div>
   </div>
 </div>
@@ -319,28 +329,77 @@
     });
     currentNodes = [];
   }
+
+  /* ===== Sound manifest + auto-discovery ===== */
   async function fetchManifest(){
     try{
       const res = await fetch('assets/sfx/manifest.json', {cache:'no-cache'});
       if (!res.ok) throw new Error('manifest missing');
       manifest = await res.json();
-    }catch(_){ manifest = DEFAULT_MANIFEST; }
+    }catch(_){
+      manifest = null; // triggers auto-discovery
+    }
   }
+
+  async function autoDiscoverForKey(key){
+    // Tries <key>_01.._20 with preferred extensions (wav > mp3 > ogg).
+    const exts = ['wav','mp3','ogg'];
+    const found = [];
+    for (let i=1; i<=20; i++){
+      const idx = String(i).padStart(2,'0');
+      let got = false;
+      for (const ext of exts){
+        const url = `assets/sfx/${key}/${key}_${idx}.${ext}`;
+        try{
+          const r = await fetch(url, {cache:'no-cache'});
+          if (r.ok){
+            found.push(`${key}_${idx}.${ext}`);
+            got = true;
+            break; // next index
+          }
+        }catch(_){}
+      }
+      if (!got) {
+        // Stop early if we’ve already found a sequence and we miss one index.
+        if (found.length) break;
+        // else keep probing to find first existing index (in case you start at 02)
+      }
+    }
+    return found;
+  }
+
   async function decodeAll(){
     ensureAudio();
+    // 1) Prefer explicit manifest if present.
+    if (manifest){
+      for (const a of animals){
+        const list = (manifest[a.key]||[]);
+        bank[a.key] = [];
+        for (const file of list){
+          await decodeOne(a.key, file);
+        }
+      }
+      return;
+    }
+    // 2) Otherwise, auto-discover per animal.
     for (const a of animals){
-      const list = (manifest[a.key]||[]);
       bank[a.key] = [];
-      for (const file of list){
-        try{
-          const url = `assets/sfx/${a.key}/${file}`;
-          const ab = await fetch(url).then(r=>r.arrayBuffer());
-          const buf = await ctx.decodeAudioData(ab);
-          bank[a.key].push(buf);
-        }catch(_){}
+      const files = await autoDiscoverForKey(a.key);
+      for (const f of files){
+        await decodeOne(a.key, f);
       }
     }
   }
+
+  async function decodeOne(key, file){
+    try{
+      const url = `assets/sfx/${key}/${file}`;
+      const ab = await fetch(url).then(r=>r.arrayBuffer());
+      const buf = await ctx.decodeAudioData(ab);
+      bank[key].push(buf);
+    }catch(_){}
+  }
+
   function playAnimalSound(key){
     if (!ctx) ensureAudio();
     if (quiet) return 0;
@@ -371,7 +430,7 @@
   function placeNonOverlapping(){
     const r = Math.max(90, Math.min(140, Math.min(innerWidth, innerHeight)*0.12));
     const area = { x0: innerWidth*0.1, x1: innerWidth*0.9, y0: innerHeight*0.22, y1: innerHeight*0.68 };
-    for (let tries=0; tries<14; tries++){
+    for (let tries=0; tries<18; tries++){
       const x = area.x0 + Math.random()*(area.x1-area.x0);
       const y = area.y0 + Math.random()*(area.y1-area.y0);
       const candidate = {x,y,r};
@@ -485,7 +544,22 @@
   fsBtn.addEventListener('click', async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch {} });
   window.addEventListener('contextmenu', e => e.preventDefault());
 
-  /* ===== Book UI wiring ===== */
+  /* ===== Handle rotation/resize: tidy bubbles that went offscreen ===== */
+  function clampActiveToViewport(){
+    for (const p of activePops){
+      const r = p.r;
+      p.x = Math.max(r, Math.min(innerWidth - r, p.x));
+      p.y = Math.max(r, Math.min(innerHeight - r, p.y));
+      p.el.style.left = p.x + 'px';
+      p.el.style.top  = p.y + 'px';
+    }
+  }
+  window.addEventListener('resize', clampActiveToViewport);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(clampActiveToViewport, 150); // wait for iOS reflow
+  });
+
+  /* ===== Book UI wiring (plays audio on click) ===== */
   animals.forEach(a=>{
     const tile = document.createElement('div');
     tile.className = 'tile';
@@ -502,6 +576,9 @@
         <ul>${data.facts.map(f=>`<li>${f}</li>`).join('')}</ul>
         <p style="margin-top:12px; opacity:.8">Tip: With a grown-up, tap the screen to hear the sound.</p>
       `;
+      // Play the animal’s audio when its page opens (respect Quiet/Silly toggles)
+      ensureAudio();
+      playAnimalSound(a.key);
     };
     tile.addEventListener('click', show);
     tile.addEventListener('keydown', (ev)=>{ if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); show(); } });
@@ -536,31 +613,20 @@
 </script>
 
 <!--
-  SOUND LIBRARY (folders per animal):
-  assets/sfx/manifest.json
-  assets/sfx/cow/      cow_01.mp3, cow_02.ogg, ...
-  assets/sfx/pig/
-  assets/sfx/sheep/
-  assets/sfx/duck/
-  assets/sfx/chicken/
-  assets/sfx/horse/
-  assets/sfx/goat/
-  assets/sfx/dog/
-  assets/sfx/cat/
-  assets/sfx/rabbit/
+  SOUND LIBRARY (no manifest needed now):
+  Place files like:
+  assets/sfx/cat/cat_01.wav
+  assets/sfx/cat/cat_02.wav
+  assets/sfx/dog/dog_01.wav
+  ...
+  Auto-discovery checks _01.._20 for wav→mp3→ogg per animal.
 
-  manifest.json example:
+  If you DO want an explicit manifest (takes precedence), create:
+  assets/sfx/manifest.json
   {
-    "cow": ["cow_01.mp3","cow_02.mp3"],
-    "pig": ["pig_01.mp3"],
-    "sheep": [],
-    "duck": ["duck_01.mp3"],
-    "chicken": ["chicken_01.mp3","chicken_02.mp3"],
-    "horse": [],
-    "goat": [],
-    "dog": [],
-    "cat": [],
-    "rabbit": []
+    "cat": ["cat_01.wav","cat_02.wav"],
+    "dog": ["dog_01.mp3"],
+    ...
   }
 -->
 </body>
