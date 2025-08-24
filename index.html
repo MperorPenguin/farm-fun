@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Farm Fun — Tap & Type (Kids Mode)</title>
+<style>
+  :root{
+    --sky:#bfe9ff; --hill1:#8bd17a; --hill2:#78c06a; --field:#9be28f;
+    --pond:#8cd3ff; --sun:#ffd166; --barn:#b23a48; --roof:#7a2028;
+    --panel:#ffffffee; --ink:#1f2937; --shadow:#00000024;
+  }
+  html,body{height:100%;margin:0}
+  body{
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,var(--sky) 0 62%, var(--field) 62% 100%);
+    overflow:hidden;
+    touch-action: manipulation;
+  }
+
+  /* BACKGROUND SCENE */
+  .sun{position:absolute; width:140px; height:140px; right:4vw; top:4vh; background:var(--sun);
+       border-radius:50%; box-shadow:0 0 50px 12px #ffd16688 inset, 0 0 70px #ffd16655;}
+  .cloud{position:absolute; background:#fff; width:200px; height:75px; border-radius:50px;
+         box-shadow:48px 0 0 12px #fff, 96px 0 0 8px #fff; opacity:.9; filter:drop-shadow(0 8px 0 #0000000f);}
+  .cloud.c1{left:8vw; top:10vh; transform:scale(1.1)}
+  .cloud.c2{left:30vw; top:6vh; transform:scale(1.4)}
+  .cloud.c3{left:58vw; top:16vh; transform:scale(1.2)}
+
+  .hill{position:absolute; left:-10vw; right:-10vw; height:30vh; border-radius:50%;}
+  .hill.h1{bottom:24vh; background:radial-gradient(120% 70% at 50% 100%, var(--hill1) 0 60%, transparent 61%); z-index:0;}
+  .hill.h2{bottom:20vh; background:radial-gradient(120% 70% at 50% 100%, var(--hill2) 0 60%, transparent 61%); z-index:0;}
+
+  .pond{position:absolute; left:64vw; bottom:15vh; width:22vw; height:8vw;
+        background:radial-gradient(60% 70% at 50% 50%, #b9e6ff 0 60%, #9fdcff 61% 100%);
+        border-radius:50%; box-shadow:0 10px 0 #00000012; z-index:1;}
+  .reeds{position:absolute; left:calc(64vw + 4vw); bottom:calc(15vh + 2vw); width:12vw; height:6vw; z-index:1;}
+  .reeds:before,.reeds:after{content:""; position:absolute; inset:0;
+    background:repeating-linear-gradient(90deg,#7fbf63 0 3px, transparent 3px 8px);}
+  .reeds:after{transform:skewX(-10deg); opacity:.7}
+
+  .barn{position:absolute; left:6vw; bottom:17vh; width:200px; height:170px; background:var(--barn);
+        border:6px solid var(--roof); box-shadow:0 8px 0 #7a202844 inset; z-index:1;}
+  .barn:before{content:""; position:absolute; top:-80px; left:0; right:0; margin:auto;
+               width:0; height:0; border-left:108px solid transparent; border-right:108px solid transparent;
+               border-bottom:80px solid var(--barn); filter:drop-shadow(0 6px 0 #7a202844);}
+  .barn:after{content:""; position:absolute; left:60px; top:58px; width:80px; height:88px; background:#fff;
+              box-shadow:inset 0 0 0 6px var(--roof);}
+
+  .windmill{position:absolute; left:24vw; bottom:18vh; width:10px; height:140px; background:#f3f4f6;
+            box-shadow:0 0 0 2px #e5e7eb inset; z-index:1;}
+  .windmill:after{content:""; position:absolute; left:-36px; top:-30px; width:80px; height:80px; border-radius:50%;
+                  background:conic-gradient(from 0deg, #e9ecef 0 25%, #dfe4ea 25% 50%, #e9ecef 50% 75%, #dfe4ea 75% 100%);
+                  animation:spin 6s linear infinite; box-shadow:0 2px 0 #00000010;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .hay{position:absolute; width:80px; height:54px; background:#f7e4c2; left:40vw; bottom:16vh; border-radius:12px;
+       box-shadow:inset 0 0 0 6px #e9cf9f, 0 4px 0 #00000010;}
+
+  .tree{position:absolute; width:18px; height:80px; background:#8b5e3c; border-radius:6px; bottom:18vh; z-index:1;}
+  .tree:after{content:""; position:absolute; left:-36px; bottom:60px; width:90px; height:90px; border-radius:50%;
+              background:#67b86a; box-shadow:0 10px 0 #58a65c inset;}
+  .tree.t1{left:48vw}
+  .tree.t2{left:12vw}
+
+  .coop{position:absolute; width:140px; height:110px; background:#d1b187; bottom:16.5vh; border-radius:8px;
+        box-shadow:0 6px 0 #b79263 inset, 0 4px 0 #00000012; z-index:1;}
+  .coop:before{content:""; position:absolute; top:-50px; left:0; right:0; margin:auto; width:0; height:0;
+               border-left:80px solid transparent; border-right:80px solid transparent; border-bottom:50px solid #d1b187;}
+  .coop.chicken{left:15vw}
+  .coop.duck{left:70vw}
+
+  /* BACKGROUND ACTORS */
+  .bg-track{position:absolute; inset:0; pointer-events:none; z-index:1;}
+  .tractor{
+    position:absolute; bottom:13vh; left:-25vw; font-size:min(4.2vw, 56px);
+    filter:drop-shadow(0 3px 0 var(--shadow)); animation: drive 18s linear infinite;
+  }
+  .tractor span{display:inline-block; transform:translateY(4px)}
+  @keyframes drive { 0%{ transform: translateX(0) } 100%{ transform: translateX(150vw) } }
+
+  .runner{position:absolute; left:-10vw; z-index:1; font-size:min(2.6vw, 34px);
+          filter:drop-shadow(0 2px 0 #00000018);}
+  @keyframes path-low { 0%{transform:translate(-10vw,0)} 50%{transform:translate(40vw,-1.6vh)} 100%{transform:translate(120vw,0)} }
+  @keyframes path-mid { 0%{transform:translate(-10vw,-1vh)} 30%{transform:translate(25vw,-3vh)} 60%{transform:translate(70vw,0)} 100%{transform:translate(120vw,-2vh)} }
+  @keyframes path-pond{ 0%{transform:translate(60vw,-1vh)} 25%{transform:translate(70vw,0.5vh)} 50%{transform:translate(80vw,-0.5vh)} 75%{transform:translate(70vw,0.4vh)} 100%{transform:translate(120vw,0)} }
+  @keyframes path-loop{ 0%{transform:translate(20vw,0)} 25%{transform:translate(30vw,-2vh)} 50%{transform:translate(40vw,0)} 75%{transform:translate(30vw,2vh)} 100%{transform:translate(120vw,0)} }
+
+  /* STAGE & POPS */
+  .stage{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:3;}
+  .pop{position:absolute; display:grid; place-items:center; width:1px; height:1px; transform:translate(-50%,-50%);}
+  .bubble{
+    display:grid; place-items:center; padding:26px 28px; border-radius:24px;
+    background: white; box-shadow:0 18px 50px var(--shadow), inset 0 0 0 6px #0000000e;
+    will-change: transform, opacity, filter;
+  }
+  .emoji{font-size: clamp(84px, 16vw, 180px); line-height:1}
+  .name{font-weight:800; margin-top:10px; font-size: clamp(16px, 3.5vw, 26px)}
+  .onom{font-size:clamp(13px, 2.8vw, 18px); opacity:.8; margin-top:4px}
+  .enter{ animation: enter 900ms cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes enter{
+    0%{ transform: translateY(18px) scale(.7) rotate(-2deg); opacity:0; filter:blur(2px)}
+    60%{ transform: translateY(-12px) scale(1.08) rotate(1deg); opacity:1; filter:blur(0)}
+    100%{ transform: translateY(0) scale(1); opacity:1}
+  }
+  .exit{ animation: exit 650ms cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes exit{
+    0%{ transform: translateY(0) scale(1); opacity:1}
+    100%{ transform: translateY(-24px) scale(.98); opacity:0}
+  }
+  .confetti{position:fixed; width:10px; height:10px; border-radius:50%; pointer-events:none;}
+
+  /* HUD & GATE */
+  .hud{position:fixed; left:50%; transform:translateX(-50%); bottom:2vh; z-index:5;
+       display:flex; gap:10px; align-items:center; background:var(--panel);
+       padding:12px 16px; border-radius:14px; backdrop-filter: blur(6px);}
+  .hud button, .hud .toggle, .hud label{
+    border:0; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700;
+    box-shadow:0 4px 0 #00000014; background:#e5e7eb;
+  }
+  .hud button.primary{background:#111827; color:white;}
+  .label{font-size:12px; opacity:.8; margin-left:6px}
+  .range{appearance:none; height:8px; border-radius:6px; background:#e5e7eb; outline:none; width:160px;}
+  .range::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:#111827}
+
+  .hint{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+        font-size:clamp(18px,3.2vw,24px); background:var(--panel); padding:10px 14px; border-radius:12px;
+        animation: pulse 2.2s ease-in-out infinite; box-shadow:0 8px 24px #0000001c; z-index:4;}
+  @keyframes pulse{0%,100%{opacity:.6} 50%{opacity:1}}
+
+  .gate{position:fixed; inset:0; display:grid; place-items:center; background:#0008; z-index:10}
+  .card{background:white; padding:28px; border-radius:18px; text-align:center; width:min(680px,92vw);
+        box-shadow:0 20px 60px #00000033;}
+  .title{font-size:clamp(28px,5vw,40px); margin:0 0 8px}
+  .subtitle{margin:0 0 16px; opacity:.8}
+  .big{font-size:clamp(20px,3.6vw,28px); padding:14px 18px; border-radius:12px}
+
+  button:focus-visible, input:focus-visible{outline:3px solid #11182788; outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- Scene layers -->
+<div class="sun"></div>
+<div class="cloud c1"></div>
+<div class="cloud c2"></div>
+<div class="cloud c3"></div>
+
+<div class="hill h1"></div>
+<div class="hill h2"></div>
+<div class="windmill"></div>
+<div class="barn"></div>
+<div class="hay"></div>
+<div class="tree t1"></div>
+<div class="tree t2"></div>
+<div class="pond"></div>
+<div class="reeds"></div>
+<div class="coop chicken" title="Chicken coop"></div>
+<div class="coop duck" title="Duck coop"></div>
+
+<!-- Background actors -->
+<div class="bg-track" aria-hidden="true">
+  <div class="tractor" title="Farmer on a tractor">👨‍🌾<span>🚜</span></div>
+</div>
+
+<!-- Start Gate -->
+<div class="gate" id="gate" aria-modal="true" role="dialog">
+  <div class="card">
+    <h1 class="title">Farm Fun</h1>
+    <p class="subtitle">Tap or press any key. Audio max 3s; newest sound fades over the previous.</p>
+    <button id="startBtn" class="big">Start</button>
+    <div class="tip" style="margin-top:10px; font-size:12px; opacity:.75">
+      Place sounds in <code>assets/sfx/&lt;animal&gt;/</code> and list them in <code>assets/sfx/manifest.json</code>.
+    </div>
+  </div>
+</div>
+
+<!-- Stage for pops -->
+<div class="stage" id="stage" aria-live="polite"></div>
+
+<!-- Tap hint -->
+<div class="hint" id="hint">Tap or press any key 🐮</div>
+
+<!-- HUD (kid-safe) -->
+<div class="hud" aria-label="controls">
+  <button id="fsBtn" class="primary" title="Full screen">Full screen</button>
+  <span class="label">Volume</span><input id="vol" class="range" type="range" min="0" max="1" step="0.01" value="0.6" />
+  <button class="toggle" id="quietBtn" title="Mute all sounds">Quiet: Off</button>
+  <button class="toggle" id="sillyBtn" title="Enable/disable silly fallback">Silly sound: On</button>
+</div>
+
+<script>
+(() => {
+  const animals = [
+    {name:'Cow', emoji:'🐮', say:'Moo!',    hue:20,  key:'cow'},
+    {name:'Pig', emoji:'🐷', say:'Oink!',   hue:340, key:'pig'},
+    {name:'Sheep', emoji:'🐑', say:'Baa!',  hue:70,  key:'sheep'},
+    {name:'Duck', emoji:'🦆', say:'Quack!', hue:160, key:'duck'},
+    {name:'Chicken', emoji:'🐔', say:'Cluck!', hue:35, key:'chicken'},
+    {name:'Horse', emoji:'🐴', say:'Neigh!', hue:15, key:'horse'},
+    {name:'Goat', emoji:'🐐', say:'Maa!',   hue:60,  key:'goat'},
+    {name:'Dog', emoji:'🐶', say:'Woof!',   hue:30,  key:'dog'},
+    {name:'Cat', emoji:'🐱', say:'Meow!',   hue:300, key:'cat'},
+    {name:'Rabbit', emoji:'🐰', say:'Boing!', hue:200, key:'rabbit'},
+  ];
+
+  const DEFAULT_MANIFEST = Object.fromEntries(animals.map(a=>[a.key, []]));
+
+  const gate = document.getElementById('gate');
+  const startBtn = document.getElementById('startBtn');
+  const stage = document.getElementById('stage');
+  const hint = document.getElementById('hint');
+  const fsBtn = document.getElementById('fsBtn');
+  const vol = document.getElementById('vol');
+  const quietBtn = document.getElementById('quietBtn');
+  const sillyBtn = document.getElementById('sillyBtn');
+  const bgTrack = document.querySelector('.bg-track');
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let ctx, masterGain, limiter, softLP, ambienceDelay, ambienceGain;
+  let quiet = false, sillyOn = true;
+  const bank = {};
+  let manifest = null;
+  let currentNodes = [];
+
+  function ensureAudio(){
+    if (ctx) return;
+    ctx = new AudioCtx();
+
+    masterGain = ctx.createGain();
+    masterGain.gain.value = parseFloat(vol.value);
+
+    softLP = ctx.createBiquadFilter(); softLP.type='lowpass'; softLP.frequency.value=3200; softLP.Q.value=0.5;
+    limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value=-14; limiter.knee.value=18; limiter.ratio.value=8; limiter.attack.value=0.003; limiter.release.value=0.12;
+    ambienceDelay = ctx.createDelay(0.25); ambienceDelay.delayTime.value=0.07;
+    ambienceGain = ctx.createGain(); ambienceGain.gain.value=0.12;
+
+    masterGain.connect(softLP).connect(limiter).connect(ctx.destination);
+    softLP.connect(ambienceDelay).connect(ambienceGain).connect(limiter);
+  }
+  function connectOut(node){ node.connect(masterGain); node.connect(ambienceDelay); }
+  vol.addEventListener('input', () => { if(masterGain){ masterGain.gain.value = parseFloat(vol.value);} });
+  quietBtn.addEventListener('click', () => { quiet = !quiet; quietBtn.textContent = `Quiet: ${quiet?'On':'Off'}`; });
+  sillyBtn.addEventListener('click', () => { sillyOn = !sillyOn; sillyBtn.textContent = `Silly sound: ${sillyOn?'On':'Off'}`; });
+
+  function makeEnv(duration){
+    const g = ctx.createGain();
+    const now = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.9, now + Math.min(0.05, duration*0.2));
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    return g;
+  }
+  function fallbackPlay(key, maxSec){
+    if (!sillyOn) return 0;
+    const d = Math.min(maxSec, 0.9);
+    const o=ctx.createOscillator(); o.type='triangle';
+    const g=makeEnv(d); o.connect(g); connectOut(g);
+    o.frequency.value = ({cow:120,pig:200,sheep:420,duck:600,chicken:520,horse:240,goat:380,dog:140,cat:360,rabbit:320}[key]||300);
+    o.start(); o.stop(ctx.currentTime+d);
+    currentNodes.push({src:o, gainNode:g});
+    setTimeout(()=>{ currentNodes = currentNodes.filter(n=>n.src!==o); }, (d+0.2)*1000);
+    return d;
+  }
+  function stopCurrentNodes(){
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    currentNodes.forEach(n=>{
+      try{
+        if (n.gainNode){
+          n.gainNode.gain.cancelScheduledValues(now);
+          n.gainNode.gain.setValueAtTime(n.gainNode.gain.value, now);
+          n.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        }
+        n.src.stop(now + 0.13);
+      }catch(_){}
+    });
+    currentNodes = [];
+  }
+
+  async function fetchManifest(){
+    try{
+      const res = await fetch('assets/sfx/manifest.json', {cache:'no-cache'});
+      if (!res.ok) throw new Error('manifest missing');
+      manifest = await res.json();
+    }catch(_){
+      manifest = DEFAULT_MANIFEST;
+    }
+  }
+  async function decodeAll(){
+    ensureAudio();
+    for (const a of animals){
+      const list = (manifest[a.key]||[]);
+      bank[a.key] = [];
+      for (const file of list){
+        try{
+          const url = `assets/sfx/${a.key}/${file}`;
+          const ab = await fetch(url).then(r=>r.arrayBuffer());
+          const buf = await ctx.decodeAudioData(ab);
+          bank[a.key].push(buf);
+        }catch(_){}
+      }
+    }
+  }
+
+  function playAnimalSound(key){
+    if (!ctx) ensureAudio();
+    if (quiet) return 0;
+    stopCurrentNodes();
+
+    const list = bank[key] || [];
+    const maxDur = 3.0;
+    if (list.length){
+      const buf = list[(Math.random()*list.length)|0];
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const g = ctx.createGain(); g.gain.value = 0.95;
+      src.connect(g); connectOut(g);
+
+      const now = ctx.currentTime;
+      const playDur = Math.min(buf.duration || maxDur, maxDur);
+      g.gain.setValueAtTime(0.95, now + Math.max(0, playDur - 0.15));
+      g.gain.exponentialRampToValueAtTime(0.0001, now + playDur);
+      src.start(); src.stop(now + playDur + 0.02);
+
+      currentNodes.push({src, gainNode:g});
+      setTimeout(()=>{ currentNodes = currentNodes.filter(n=>n.src!==src); }, (playDur+0.2)*1000);
+      return playDur;
+    }
+    return fallbackPlay(key, maxDur);
+  }
+
+  function burst(x,y,hue){
+    const n = 12;
+    for(let i=0;i<n;i++){
+      const d = document.createElement('div');
+      d.className = 'confetti';
+      d.style.left=(x)+'px'; d.style.top=(y)+'px';
+      d.style.background = `hsl(${hue}, 80%, ${60+Math.random()*20}%)`;
+      d.style.opacity = 0.95;
+      const size = 10 + Math.random()*10;
+      d.style.width = d.style.height = size+'px';
+      document.body.appendChild(d);
+      const ang = Math.random()*Math.PI*2, dist = 60+Math.random()*110;
+      const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist;
+      const ms = 1400 + Math.random()*700;
+      d.animate([
+        {transform:'translate(0,0) scale(1)', opacity:1, offset:0},
+        {transform:`translate(${dx}px,${dy*0.7}px) scale(0.9)`, opacity:0.85, offset:0.6},
+        {transform:`translate(${dx}px,${dy}px) scale(0.8)`, opacity:0}
+      ], {duration: ms, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards'});
+      setTimeout(()=>d.remove(), ms+200);
+    }
+  }
+
+  function popAnimal(x, y){
+    const a = animals[(Math.random()*animals.length)|0];
+    const rx = x ?? (Math.random() * (innerWidth * 0.8) + innerWidth * 0.1);
+    const ry = y ?? (Math.random() * (innerHeight * 0.46) + innerHeight * 0.22);
+
+    playAnimalSound(a.key);
+
+    const node = document.createElement('div');
+    node.className = 'pop';
+    node.style.left = rx + 'px';
+    node.style.top  = ry + 'px';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble enter';
+    bubble.style.borderRadius = 22 + Math.random()*12 + 'px';
+    bubble.style.filter = `drop-shadow(0 16px 28px var(--shadow))`;
+    bubble.style.borderColor = `hsla(${a.hue},70%,35%,.18)`;
+    bubble.style.boxShadow += `, 0 0 0 10px hsla(${a.hue}, 90%, 80%, .22) inset`;
+
+    const emoji = document.createElement('div'); emoji.className = 'emoji'; emoji.textContent = a.emoji;
+    const name  = document.createElement('div'); name.className  = 'name';  name.textContent = a.name;
+    const onom  = document.createElement('div'); onom.className  = 'onom';  onom.textContent = a.say;
+
+    bubble.appendChild(emoji); bubble.appendChild(name); bubble.appendChild(onom);
+    node.appendChild(bubble);
+    stage.appendChild(node);
+
+    burst(rx, ry, a.hue);
+
+    setTimeout(() => {
+      bubble.classList.remove('enter');
+      bubble.classList.add('exit');
+      setTimeout(()=>node.remove(), 700);
+    }, 3000);
+  }
+
+  const runnerEmojis = ['🦆','🐔','🐓','🦆','🐔'];
+  function spawnRunner(){
+    const r = document.createElement('div');
+    r.className = 'runner';
+    r.textContent = runnerEmojis[(Math.random()*runnerEmojis.length)|0];
+    const paths = ['path-low','path-mid','path-loop','path-pond'];
+    const pick = paths[(Math.random()*paths.length)|0];
+    const dur = 8 + Math.random()*6;
+    const baseBottomVh = pick==='path-pond' ? 17 : 16;
+
+    r.style.bottom = baseBottomVh + 'vh';
+    r.style.animation = `${pick} ${dur}s linear forwards`;
+    bgTrack.appendChild(r);
+    setTimeout(()=>r.remove(), (dur+1)*1000);
+  }
+
+  function triggerFromEvent(e){
+    const isPointer = ('clientX' in e);
+    const rx = isPointer ? e.clientX : (Math.random()*innerWidth*0.8 + innerWidth*0.1);
+    const ry = isPointer ? e.clientY : (Math.random()*innerHeight*0.46 + innerHeight*0.22);
+    popAnimal(rx, ry);
+  }
+
+  async function begin(){
+    ensureAudio();
+    await fetchManifest();
+    await decodeAll();
+
+    gate.style.display='none';
+    hint.style.opacity = 0.75;
+    setTimeout(()=>hint.remove(), 2200);
+    popAnimal(innerWidth*0.58, innerHeight*0.42);
+  }
+
+  startBtn.addEventListener('click', begin);
+  window.addEventListener('pointerdown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
+  window.addEventListener('keydown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
+
+  fsBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch {}
+  });
+
+  setInterval(() => { if (document.hidden) return; if (Math.random() < 0.7) spawnRunner(); }, 4000);
+  window.addEventListener('contextmenu', e => e.preventDefault());
+})();
+</script>
+
+</body>
+</html>
