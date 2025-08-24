@@ -80,6 +80,7 @@
   .tractor span{display:inline-block; transform:translateY(4px)}
   @keyframes drive { 0%{ transform: translateX(0) } 100%{ transform: translateX(150vw) } }
 
+  /* Ducks & chickens with distinct paths */
   .runner{position:absolute; left:-10vw; z-index:1; font-size:min(2.6vw, 34px);
           filter:drop-shadow(0 2px 0 #00000018);}
   @keyframes path-low { 0%{transform:translate(-10vw,0)} 50%{transform:translate(40vw,-1.6vh)} 100%{transform:translate(120vw,0)} }
@@ -192,6 +193,9 @@
 
 <script>
 (() => {
+  /* ===============================
+     CONFIG / DATA
+     =============================== */
   const animals = [
     {name:'Cow', emoji:'🐮', say:'Moo!',    hue:20,  key:'cow'},
     {name:'Pig', emoji:'🐷', say:'Oink!',   hue:340, key:'pig'},
@@ -207,6 +211,9 @@
 
   const DEFAULT_MANIFEST = Object.fromEntries(animals.map(a=>[a.key, []]));
 
+  /* ===============================
+     DOM HOOKS
+     =============================== */
   const gate = document.getElementById('gate');
   const startBtn = document.getElementById('startBtn');
   const stage = document.getElementById('stage');
@@ -217,12 +224,15 @@
   const sillyBtn = document.getElementById('sillyBtn');
   const bgTrack = document.querySelector('.bg-track');
 
+  /* ===============================
+     AUDIO CHAIN
+     =============================== */
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let ctx, masterGain, limiter, softLP, ambienceDelay, ambienceGain;
   let quiet = false, sillyOn = true;
-  const bank = {};
+  const bank = {}; // key -> [AudioBuffer, ...]
   let manifest = null;
-  let currentNodes = [];
+  let currentNodes = []; // track nodes to fade/stop on takeover
 
   function ensureAudio(){
     if (ctx) return;
@@ -245,6 +255,7 @@
   quietBtn.addEventListener('click', () => { quiet = !quiet; quietBtn.textContent = `Quiet: ${quiet?'On':'Off'}`; });
   sillyBtn.addEventListener('click', () => { sillyOn = !sillyOn; sillyBtn.textContent = `Silly sound: ${sillyOn?'On':'Off'}`; });
 
+  // Fallback synth (only when sillyOn & no library clip)
   function makeEnv(duration){
     const g = ctx.createGain();
     const now = ctx.currentTime;
@@ -264,6 +275,7 @@
     setTimeout(()=>{ currentNodes = currentNodes.filter(n=>n.src!==o); }, (d+0.2)*1000);
     return d;
   }
+
   function stopCurrentNodes(){
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -280,6 +292,9 @@
     currentNodes = [];
   }
 
+  /* ===============================
+     LIBRARY LOADING
+     =============================== */
   async function fetchManifest(){
     try{
       const res = await fetch('assets/sfx/manifest.json', {cache:'no-cache'});
@@ -300,15 +315,18 @@
           const ab = await fetch(url).then(r=>r.arrayBuffer());
           const buf = await ctx.decodeAudioData(ab);
           bank[a.key].push(buf);
-        }catch(_){}
+        }catch(_){ /* skip bad/missing */ }
       }
     }
   }
 
+  /* ===============================
+     CONTROLLED PLAYBACK (3s cap + takeover)
+     =============================== */
   function playAnimalSound(key){
     if (!ctx) ensureAudio();
     if (quiet) return 0;
-    stopCurrentNodes();
+    stopCurrentNodes(); // newest wins
 
     const list = bank[key] || [];
     const maxDur = 3.0;
@@ -331,6 +349,9 @@
     return fallbackPlay(key, maxDur);
   }
 
+  /* ===============================
+     VISUALS
+     =============================== */
   function burst(x,y,hue){
     const n = 12;
     for(let i=0;i<n;i++){
@@ -390,6 +411,9 @@
     }, 3000);
   }
 
+  /* ===============================
+     BACKGROUND RUNNERS
+     =============================== */
   const runnerEmojis = ['🦆','🐔','🐓','🦆','🐔'];
   function spawnRunner(){
     const r = document.createElement('div');
@@ -406,6 +430,9 @@
     setTimeout(()=>r.remove(), (dur+1)*1000);
   }
 
+  /* ===============================
+     INPUT (touch acts like key)
+     =============================== */
   function triggerFromEvent(e){
     const isPointer = ('clientX' in e);
     const rx = isPointer ? e.clientX : (Math.random()*innerWidth*0.8 + innerWidth*0.1);
@@ -415,8 +442,8 @@
 
   async function begin(){
     ensureAudio();
-    await fetchManifest();
-    await decodeAll();
+    await fetchManifest();   // library
+    await decodeAll();       // decode into bank
 
     gate.style.display='none';
     hint.style.opacity = 0.75;
@@ -424,6 +451,9 @@
     popAnimal(innerWidth*0.58, innerHeight*0.42);
   }
 
+  /* ===============================
+     WIRING
+     =============================== */
   startBtn.addEventListener('click', begin);
   window.addEventListener('pointerdown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
   window.addEventListener('keydown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
@@ -435,10 +465,39 @@
     } catch {}
   });
 
+  // Background runners every few seconds
   setInterval(() => { if (document.hidden) return; if (Math.random() < 0.7) spawnRunner(); }, 4000);
+
+  // Safety
   window.addEventListener('contextmenu', e => e.preventDefault());
 })();
 </script>
 
+<!--
+  ====== SOUND LIBRARY SETUP (IMPORTANT) ======
+  1) Create folders like:
+     assets/sfx/cow/
+     assets/sfx/pig/
+     ...
+  2) Put your clips inside (mp3/ogg/wav). Example:
+     assets/sfx/cow/cow_01.mp3
+     assets/sfx/cow/cow_02.ogg
+  3) Create assets/sfx/manifest.json with filenames, e.g.:
+
+  {
+    "cow": ["cow_01.mp3", "cow_02.ogg"],
+    "pig": ["pig_01.mp3"],
+    "sheep": [],
+    "duck": ["duck_01.mp3"],
+    "chicken": ["chicken_01.mp3","chicken_02.mp3"],
+    "horse": [],
+    "goat": [],
+    "dog": [],
+    "cat": [],
+    "rabbit": []
+  }
+
+  If manifest.json is missing, the app still runs (uses the silly fallback when enabled).
+-->
 </body>
 </html>
