@@ -3,13 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Farm Fun — Tap & Type (Kids Mode)</title>
+<title>Farm Fun — Tap & Learn</title>
 <style>
   :root{
-    /* Global palette */
-    --skyTop:#bfe9ff; --skyMid:#aee0ff; --skyLow:#9fd8ff;
-    --haze:#ffffff35;
-    --fieldNear:#7dcf6a; --fieldFar:#92dc7a;
+    --skyTop:#bfe9ff; --skyMid:#aee0ff; --fieldFar:#92dc7a;
     --hillFar:#6fb866; --hillMid:#65ad5c; --hillNear:#5aa454;
     --pond:#97d9ff;
     --barnBody:#b23a48; --barnBodyShade:#992d3a; --barnTrim:#7a2028; --barnRoof:#8a2731;
@@ -18,17 +15,11 @@
     --panel:#ffffffee; --ink:#1f2937; --shadow:#00000024;
     --sun:#ffd166;
 
-    /* Scale refs so SVGs stay consistent across devices */
-    --envScale: 1;           /* global multiplier if you want everything bigger/smaller */
-    --barnW: 260px;          /* barn baseline width */
-    --millH: 220px;          /* windmill baseline height */
-    --tractorScale: 1;       /* tractor size vs buildings */
-    --runnerScale: 1;        /* duck/chicken size vs buildings */
-
-    /* Motion */
+    --envScale: 1;
+    --barnW: 260px;
+    --millH: 220px;
     --cloudMin: 32s; --cloudMax: 85s;
   }
-
   html,body{height:100%;margin:0}
   body{
     font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
@@ -38,7 +29,7 @@
     touch-action: manipulation;
   }
 
-  /* LAYERS (parallax order: far → near) */
+  /* LAYERS */
   .layer{position:absolute; inset:auto 0; pointer-events:none}
   .sky-sun{position:absolute; right:4vw; top:5vh; width:160px; height:160px; border-radius:50%;
            background:radial-gradient(circle at 45% 45%, #fff8 0 18%, var(--sun) 19% 100%);
@@ -51,9 +42,7 @@
   .buildings{bottom:19vh; z-index:4}
   .actors-back{bottom:16vh; z-index:4}
   .actors-front{bottom:15vh; z-index:5}
-  .ui{position:fixed; inset:0; z-index:9; pointer-events:none}
 
-  /* Parallax transforms */
   .hills-far .band, .hills-mid .band, .hills-near .band{position:absolute; left:-10vw; right:-10vw; height:30vh; border-radius:50%;}
   .hills-far .band{background:radial-gradient(120% 70% at 50% 100%, var(--hillFar) 0 60%, transparent 61%)}
   .hills-mid .band{background:radial-gradient(120% 70% at 50% 100%, var(--hillMid) 0 60%, transparent 61%)}
@@ -67,22 +56,18 @@
   .water .reeds{
     position:absolute; left:calc(62vw + 5vw); bottom:1.6vw; width:12vw; height:6vw;
     background:repeating-linear-gradient(90deg,#6fb866 0 3px, transparent 3px 8px);
-    transform:skewX(-10deg);
-    opacity:.85;
+    transform:skewX(-10deg); opacity:.85;
   }
 
-  /* CLOUDS (procedural) */
+  /* CLOUDS */
   .cloud{position:absolute; top:0; will-change:transform, opacity; opacity:.95; filter:drop-shadow(0 8px 0 #0000000c)}
-  .blob{
-    width:200px; height:80px; background:#fff; border-radius:40px;
-    box-shadow: 60px 0 0 14px #fff, 120px 0 0 10px #fff, -40px 0 0 10px #fff;
-  }
+  .blob{ width:200px; height:80px; background:#fff; border-radius:40px; box-shadow: 60px 0 0 14px #fff, 120px 0 0 10px #fff, -40px 0 0 10px #fff;}
   .wispy{width:240px; height:56px; background:linear-gradient(90deg,#fff 0 60%, #fff8 61%); border-radius:30px/20px}
   .puffy{width:200px; height:70px; background:#fff; border-radius:35px; box-shadow: 0 0 0 10px #fff inset;}
   @keyframes wind-x { from{ transform: translateX(-20vw)} to{ transform: translateX(120vw)} }
   @keyframes wind-y { 0%{transform:translateY(-1vh)} 50%{transform:translateY(1.2vh)} 100%{transform:translateY(-1vh)} }
 
-  /* BUILDINGS (SVG containers) */
+  /* BUILDINGS */
   .barnWrap{position:absolute; left:7vw; width:calc(var(--barnW)*var(--envScale)); transform-origin:bottom left;}
   .windmillWrap{position:absolute; left:25vw; height:calc(var(--millH)*var(--envScale)); transform-origin:bottom left;}
   .coop{position:absolute; width:160px; height:120px; background:var(--wood); border-radius:10px;
@@ -92,26 +77,17 @@
                border-left:90px solid transparent; border-right:90px solid transparent; border-bottom:56px solid var(--wood);}
   .coop.duck{left:70vw}
 
-  /* TRACTOR & FARMER (SVG) */
-  .tractorWrap{
-    position:absolute; left:-30vw; bottom:0;
-    transform:translateZ(0) scale(calc(var(--tractorScale)*var(--envScale)));
-    filter:drop-shadow(0 3px 0 var(--shadow));
-    will-change:transform;
-    animation: drive 18s linear infinite;
-  }
-  @keyframes drive {
-    0%   { transform: translateX(0) translateY(0) scale(calc(var(--tractorScale)*var(--envScale))); }
-    50%  { transform: translateX(80vw) translateY(-1vh) scale(calc(var(--tractorScale)*var(--envScale))); }
-    100% { transform: translateX(150vw) translateY(0) scale(calc(var(--tractorScale)*var(--envScale))); }
-  }
+  /* TRACTOR */
+  .tractorWrap{position:absolute; left:-30vw; bottom:0; transform:translateZ(0) scale(calc(1*var(--envScale)));
+    filter:drop-shadow(0 3px 0 var(--shadow)); will-change:transform; animation: drive 18s linear infinite;}
+  @keyframes drive { 0%{transform:translateX(0) translateY(0) scale(1)} 50%{transform:translateX(80vw) translateY(-1vh) scale(1)} 100%{transform:translateX(150vw) translateY(0) scale(1)} }
   .wheel{transform-origin:center; animation: spin 2.2s linear infinite;}
   .wheel.small{animation-duration:1.9s}
   @keyframes spin { to { transform: rotate(360deg) } }
   .cab-bob{animation: bob 1.2s ease-in-out infinite;}
   @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
 
-  /* RUNNERS (SVG Ducks/Chickens) */
+  /* RUNNERS (SVG) */
   .runner{position:absolute; left:-10vw; will-change:transform; filter:drop-shadow(0 2px 0 #00000018);}
   .runner svg{transform-origin:50% 80%}
   .flap{animation: flap .5s ease-in-out infinite}
@@ -124,7 +100,7 @@
   @keyframes path-pond{ 0%{transform:translate(60vw,-1vh)} 25%{transform:translate(70vw,0.5vh)} 50%{transform:translate(80vw,-0.5vh)} 75%{transform:translate(70vw,0.4vh)} 100%{transform:translate(120vw,0)} }
   @keyframes path-loop{ 0%{transform:translate(20vw,0)} 25%{transform:translate(30vw,-2vh)} 50%{transform:translate(40vw,0)} 75%{transform:translate(30vw,2vh)} 100%{transform:translate(120vw,0)} }
 
-  /* STAGE POPS (unchanged core UX) */
+  /* STAGE POPS */
   .stage{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:7;}
   .pop{position:absolute; display:grid; place-items:center; width:1px; height:1px; transform:translate(-50%,-50%);}
   .bubble{
@@ -136,42 +112,37 @@
   .name{font-weight:800; margin-top:10px; font-size: clamp(16px, 3.5vw, 26px)}
   .onom{font-size:clamp(13px, 2.8vw, 18px); opacity:.8; margin-top:4px}
   .enter{ animation: enter 1000ms cubic-bezier(.2,.7,.2,1) forwards; }
-  @keyframes enter{
-    0%{ transform: translateY(18px) scale(.7) rotate(-2deg); opacity:0; filter:blur(2px)}
-    60%{ transform: translateY(-12px) scale(1.08) rotate(1deg); opacity:1; filter:blur(0)}
-    100%{ transform: translateY(0) scale(1); opacity:1}
-  }
+  @keyframes enter{ 0%{ transform: translateY(18px) scale(.7) rotate(-2deg); opacity:0; filter:blur(2px)} 60%{ transform: translateY(-12px) scale(1.08) rotate(1deg); opacity:1; filter:blur(0)} 100%{ transform: translateY(0) scale(1); opacity:1} }
   .exit{ animation: exit 800ms cubic-bezier(.2,.7,.2,1) forwards; }
-  @keyframes exit{
-    0%{ transform: translateY(0) scale(1); opacity:1}
-    100%{ transform: translateY(-24px) scale(.98); opacity:0}
-  }
+  @keyframes exit{ 0%{ transform: translateY(0) scale(1); opacity:1} 100%{ transform: translateY(-24px) scale(.98); opacity:0} }
   .confetti{position:fixed; width:10px; height:10px; border-radius:50%; pointer-events:none;}
 
-  /* HUD & GATE */
+  /* HUD, GATE, BOOK */
   .hud{position:fixed; left:50%; transform:translateX(-50%); bottom:2vh; z-index:9;
        display:flex; gap:10px; align-items:center; background:var(--panel);
        padding:12px 16px; border-radius:14px; backdrop-filter: blur(6px); pointer-events:auto}
-  .hud button, .hud .toggle, .hud label{
-    border:0; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700;
-    box-shadow:0 4px 0 #00000014; background:#e5e7eb;
-  }
+  .hud button, .hud .toggle{border:0; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700; box-shadow:0 4px 0 #00000014; background:#e5e7eb;}
   .hud button.primary{background:#111827; color:white;}
   .label{font-size:12px; opacity:.8; margin-left:6px}
-  .range{appearance:none; height:8px; border-radius:6px; background:#e5e7eb; outline:none; width:160px;}
+  .range{appearance:none; height:8px; border-radius:6px; background:#e5e7eb; outline:none; width:140px;}
   .range::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:#111827}
-
-  .hint{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
-        font-size:clamp(18px,3.2vw,24px); background:var(--panel); padding:10px 14px; border-radius:12px;
-        animation: pulse 2.2s ease-in-out infinite; box-shadow:0 8px 24px #0000001c; z-index:8;}
+  .hint{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); font-size:clamp(18px,3.2vw,24px); background:var(--panel); padding:10px 14px; border-radius:12px; animation: pulse 2.2s ease-in-out infinite; box-shadow:0 8px 24px #0000001c; z-index:8;}
   @keyframes pulse{0%,100%{opacity:.6} 50%{opacity:1}}
-
   .gate{position:fixed; inset:0; display:grid; place-items:center; background:#0008; z-index:10}
-  .card{background:white; padding:28px; border-radius:18px; text-align:center; width:min(680px,92vw);
-        box-shadow:0 20px 60px #00000033;}
-  .title{font-size:clamp(28px,5vw,40px); margin:0 0 8px}
-  .subtitle{margin:0 0 16px; opacity:.8}
+  .card{background:white; padding:28px; border-radius:18px; text-align:center; width:min(760px,92vw); box-shadow:0 20px 60px #00000033;}
+  .title{font-size:clamp(28px,5vw,40px); margin:0 0 8px} .subtitle{margin:0 0 16px; opacity:.8}
   .big{font-size:clamp(20px,3.6vw,28px); padding:14px 18px; border-radius:12px}
+
+  /* Book modal */
+  .book{position:fixed; inset:0; background:#0008; z-index:10; display:none; align-items:center; justify-content:center;}
+  .book .sheet{background:white; width:min(900px,95vw); max-height:86vh; border-radius:20px; box-shadow:0 20px 60px #00000033; overflow:hidden; display:grid; grid-template-columns: 1fr 2fr; gap:0;}
+  .book .left{background:#f9fafb; padding:18px; overflow:auto;}
+  .book .grid{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px;}
+  .book .tile{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px; border-radius:14px; background:#fff; box-shadow:0 6px 0 #0000000e; cursor:pointer; user-select:none;}
+  .book .tile .emo{font-size:42px; line-height:1} .book .tile .nm{font-weight:800; margin-top:6px;}
+  .book .right{padding:22px; overflow:auto;}
+  .book h2{margin:0 0 6px} .book p{margin:8px 0} .book ul{margin:8px 0 0 18px}
+  .book .close{position:absolute; top:14px; right:16px; border:0; background:#111827; color:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; box-shadow:0 4px 0 #00000020}
 
   button:focus-visible, input:focus-visible{outline:3px solid #11182788; outline-offset:2px}
 </style>
@@ -181,50 +152,31 @@
 <!-- PARALLAX SCENE -->
 <div class="sky-sun"></div>
 <div class="layer clouds" id="cloudLayer"></div>
-
 <div class="layer hills-far"><div class="band" style="transform:translateY(10vh) scale(1.15)"></div></div>
 <div class="layer hills-mid"><div class="band" style="transform:translateY(6vh) scale(1.06)"></div></div>
 <div class="layer hills-near"><div class="band" style="transform:translateY(2vh) scale(1.02)"></div></div>
+<div class="layer water"><div class="pond"></div><div class="reeds"></div></div>
 
-<div class="layer water">
-  <div class="pond"></div>
-  <div class="reeds"></div>
-</div>
-
-<div class="layer buildings" id="buildings">
-  <!-- Barn (SVG) -->
+<div class="layer buildings">
+  <!-- Barn -->
   <div class="barnWrap" style="bottom:0;">
     <svg viewBox="0 0 260 200" width="100%" height="auto" aria-label="Barn">
-      <!-- foundation shadow -->
       <ellipse cx="120" cy="192" rx="110" ry="8" fill="#00000018"/>
-      <!-- body -->
       <rect x="30" y="70" width="200" height="120" rx="6" fill="url(#barnShade)"/>
       <rect x="30" y="70" width="200" height="120" rx="6" fill="var(--barnBody)" opacity=".93"/>
-      <!-- roof -->
       <path d="M20,82 L130,20 L240,82 Z" fill="var(--barnRoof)" stroke="var(--barnTrim)" stroke-width="6" />
-      <!-- doors -->
       <rect x="100" y="110" width="60" height="80" fill="#fff" stroke="var(--barnTrim)" stroke-width="6"/>
       <path d="M100 150h60 M100 110l60 80 M160 110l-60 80" stroke="var(--barnTrim)" stroke-width="6" fill="none"/>
-      <!-- loft window -->
       <rect x="115" y="90" width="30" height="25" fill="#fff" stroke="var(--barnTrim)" stroke-width="5"/>
-      <defs>
-        <linearGradient id="barnShade" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stop-color="var(--barnBodyShade)"/><stop offset="1" stop-color="var(--barnBody)"/>
-        </linearGradient>
-      </defs>
+      <defs><linearGradient id="barnShade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--barnBodyShade)"/><stop offset="1" stop-color="var(--barnBody)"/></linearGradient></defs>
     </svg>
   </div>
-
-  <!-- Windmill (SVG) -->
+  <!-- Windmill -->
   <div class="windmillWrap" style="bottom:0;">
     <svg viewBox="0 0 120 220" width="auto" height="100%" aria-label="Windmill">
-      <!-- base shadow -->
       <ellipse cx="60" cy="210" rx="40" ry="6" fill="#00000018"/>
-      <!-- tower -->
       <rect x="52" y="60" width="16" height="140" rx="6" fill="var(--millPost)" stroke="#d1d5db" stroke-width="2"/>
-      <!-- cabin -->
       <rect x="35" y="40" width="50" height="30" rx="6" fill="#e5e7eb" stroke="#d1d5db" stroke-width="2"/>
-      <!-- blades hub -->
       <g transform="translate(60,55)">
         <circle r="6" fill="#bdbdbd"/>
         <g style="animation:spin 6s linear infinite; transform-origin:0 0">
@@ -236,7 +188,6 @@
       </g>
     </svg>
   </div>
-
   <!-- Coops -->
   <div class="coop chicken" title="Chicken coop" style="bottom:0;"></div>
   <div class="coop duck" title="Duck coop" style="bottom:0;"></div>
@@ -244,33 +195,22 @@
 
 <!-- BACKGROUND ACTORS -->
 <div class="layer actors-back">
-  <!-- Tractor + farmer (SVG) -->
-  <div class="tractorWrap" id="tractor">
+  <div class="tractorWrap">
     <svg viewBox="0 0 300 140" width="300" height="140" aria-label="Tractor with farmer">
-      <!-- shadow -->
       <ellipse cx="160" cy="125" rx="110" ry="8" fill="#00000018"/>
-      <!-- chassis -->
       <rect x="70" y="80" width="160" height="20" rx="8" fill="#3b82f6"/>
-      <!-- engine hood -->
       <rect x="70" y="50" width="90" height="40" rx="8" fill="#2563eb"/>
-      <!-- cab -->
       <g class="cab-bob">
         <rect x="165" y="35" width="60" height="50" rx="8" fill="#bfdbfe" stroke="#2563eb" stroke-width="6"/>
-        <!-- farmer -->
         <circle cx="195" cy="58" r="10" fill="#f4c38a"/>
         <rect x="188" y="65" width="14" height="14" rx="3" fill="#10b981"/>
         <rect x="194" y="72" width="3" height="8" rx="1.5" fill="#f4c38a"/>
       </g>
-      <!-- wheels -->
       <g class="wheel big" transform="translate(110,110)">
-        <circle r="32" fill="#111827"/>
-        <circle r="22" fill="#374151"/>
-        <circle r="6" fill="#9ca3af"/>
+        <circle r="32" fill="#111827"/><circle r="22" fill="#374151"/><circle r="6" fill="#9ca3af"/>
       </g>
       <g class="wheel small" transform="translate(220,110)">
-        <circle r="22" fill="#111827"/>
-        <circle r="14" fill="#374151"/>
-        <circle r="5" fill="#9ca3af"/>
+        <circle r="22" fill="#111827"/><circle r="14" fill="#374151"/><circle r="5" fill="#9ca3af"/>
       </g>
     </svg>
   </div>
@@ -287,10 +227,10 @@
 <div class="gate" id="gate" aria-modal="true" role="dialog">
   <div class="card">
     <h1 class="title">Farm Fun</h1>
-    <p class="subtitle">Tap or press any key. Audio max 3s; newest sound takes over. Touch = keypress.</p>
+    <p class="subtitle">Tap or press any key. Sounds max 3s; newest sound takes over. Touch = keypress.</p>
     <button id="startBtn" class="big">Start</button>
     <div class="tip" style="margin-top:10px; font-size:12px; opacity:.75">
-      Sounds from <code>assets/sfx/&lt;animal&gt;/</code> listed in <code>assets/sfx/manifest.json</code>.
+      Sounds live in <code>assets/sfx/&lt;animal&gt;/</code> and are listed in <code>assets/sfx/manifest.json</code>.
     </div>
   </div>
 </div>
@@ -299,6 +239,21 @@
   <span class="label">Volume</span><input id="vol" class="range" type="range" min="0" max="1" step="0.01" value="0.6" />
   <button class="toggle" id="quietBtn" title="Mute all sounds">Quiet: Off</button>
   <button class="toggle" id="sillyBtn" title="Enable/disable silly fallback">Silly sound: On</button>
+  <button id="bookBtn" class="toggle" title="Open the Farm Book">📖 Farm Book</button>
+</div>
+
+<!-- BOOK MODAL -->
+<div class="book" id="book">
+  <button class="close" id="bookClose">Close ✕</button>
+  <div class="sheet">
+    <div class="left">
+      <div class="grid" id="bookGrid"></div>
+    </div>
+    <div class="right" id="bookContent">
+      <h2>Tap an animal to learn</h2>
+      <p>With a grown-up, explore sounds, homes, and fun little facts. Big buttons, big smiles.</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -318,6 +273,20 @@
   ];
   const DEFAULT_MANIFEST = Object.fromEntries(animals.map(a=>[a.key, []]));
 
+  // Book content (12+ months: simple, warm language)
+  const BOOK = {
+    cow:     { title:"Cow",     intro:"Cows say “moo!” and love to munch grass.", habitat:"Fields and barns.", facts:["A baby cow is a calf.","Cows chew slowly—chomp, chomp!","They make milk."]},
+    pig:     { title:"Pig",     intro:"Pigs say “oink!” and like soft, squishy mud.", habitat:"Sties on a farm.", facts:["Baby pigs are piglets.","Pigs are smart and curious.","Mud keeps them cool."]},
+    sheep:   { title:"Sheep",   intro:"Sheep say “baa!” and wear fluffy wool coats.", habitat:"Grassy hills and fields.", facts:["A group is a flock.","Baby sheep are lambs.","Wool keeps us warm."]},
+    duck:    { title:"Duck",    intro:"Ducks say “quack!” and splash in water.", habitat:"Ponds and streams.", facts:["Duck feet are webbed for swimming.","Ducklings follow in a line.","They shake water off—splish splash!"]},
+    chicken: { title:"Chicken", intro:"Chickens say “cluck!” and peck-peck for food.", habitat:"Coops and yards.", facts:["Baby chickens are chicks.","Roosters say “cock-a-doodle-doo!”.","Chickens love grains."]},
+    horse:   { title:"Horse",   intro:"Horses say “neigh!” and run fast with strong legs.", habitat:"Stables and fields.", facts:["Baby horses are foals.","Horses wear shoes—clip, clop!","They love hay."]},
+    goat:    { title:"Goat",    intro:"Goats say “maa!” and like to climb and nibble.", habitat:"Hilly pens and fields.", facts:["Baby goats are kids.","Goats have beards!","They’re great climbers."]},
+    dog:     { title:"Dog",     intro:"Dogs say “woof!” and wag their tails.", habitat:"Homes and farms.", facts:["A puppy is a baby dog.","Dogs are helpful friends.","They love to play."]},
+    cat:     { title:"Cat",     intro:"Cats say “meow!” and curl up cozy.", habitat:"Homes and barns.", facts:["Kittens are baby cats.","Cats purr when happy.","They chase little bugs."]},
+    rabbit:  { title:"Rabbit",  intro:"Rabbits hop and have long ears.", habitat:"Burrows and gardens.", facts:["Baby rabbits are kits.","They nibble leafy greens.","They thump with their feet!"]},
+  };
+
   /* ===== DOM ===== */
   const gate = document.getElementById('gate');
   const startBtn = document.getElementById('startBtn');
@@ -329,8 +298,13 @@
   const sillyBtn = document.getElementById('sillyBtn');
   const cloudLayer = document.getElementById('cloudLayer');
   const runnerLayer = document.getElementById('runnerLayer');
+  const bookBtn = document.getElementById('bookBtn');
+  const book = document.getElementById('book');
+  const bookClose = document.getElementById('bookClose');
+  const bookGrid = document.getElementById('bookGrid');
+  const bookContent = document.getElementById('bookContent');
 
-  /* ===== AUDIO (unchanged core rules) ===== */
+  /* ===== AUDIO ===== */
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let ctx, masterGain, limiter, softLP, ambienceDelay, ambienceGain;
   let quiet = false, sillyOn = true;
@@ -411,7 +385,7 @@
   function playAnimalSound(key){
     if (!ctx) ensureAudio();
     if (quiet) return 0;
-    stopCurrentNodes();
+    stopCurrentNodes(); // newest wins
     const list = bank[key] || [];
     const maxDur = 3.0;
     if (list.length){
@@ -431,53 +405,99 @@
     return fallbackPlay(key, maxDur);
   }
 
-  /* ===== UI POPS (unchanged) ===== */
+  /* ===== NON-OVERLAP + MAX-6 ===== */
+  const MAX_POP = 6;
+  const activePops = []; // {el,x,y,r}
+  function circlesOverlap(a,b){ const dx=a.x-b.x, dy=a.y-b.y; const rr=(a.r+b.r); return dx*dx+dy*dy < rr*rr; }
+  function placeNonOverlapping(){
+    // target radius for pop bubble (approx based on viewport)
+    const r = Math.max(90, Math.min(140, Math.min(innerWidth, innerHeight)*0.12));
+    const area = { x0: innerWidth*0.1, x1: innerWidth*0.9, y0: innerHeight*0.22, y1: innerHeight*0.68 };
+    for (let tries=0; tries<14; tries++){
+      const x = area.x0 + Math.random()*(area.x1-area.x0);
+      const y = area.y0 + Math.random()*(area.y1-area.y0);
+      const candidate = {x,y,r};
+      if (!activePops.some(p => circlesOverlap(p, candidate))) return candidate;
+    }
+    return null; // couldn’t find a free spot
+  }
+  function removeOldest(){
+    if (!activePops.length) return;
+    const oldest = activePops.shift();
+    const bubble = oldest.el.querySelector('.bubble');
+    bubble.classList.remove('enter'); bubble.classList.add('exit');
+    setTimeout(()=> oldest.el.remove(), 820);
+  }
+
+  /* ===== POP UI ===== */
   function burst(x,y,hue){
-    const n = 12;
+    const n = 10;
     for(let i=0;i<n;i++){
       const d = document.createElement('div');
       d.className = 'confetti';
-      d.style.left=(x)+'px'; d.style.top=(y)+'px';
-      d.style.position='fixed';
+      d.style.left=(x)+'px'; d.style.top=(y)+'px'; d.style.position='fixed';
       d.style.background = `hsl(${hue}, 80%, ${60+Math.random()*20}%)`;
       d.style.opacity = 0.95;
-      const size = 10 + Math.random()*10;
-      d.style.width = d.style.height = size+'px';
+      const size = 10 + Math.random()*10; d.style.width = d.style.height = size+'px';
       document.body.appendChild(d);
       const ang = Math.random()*Math.PI*2, dist = 60+Math.random()*110;
       const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist;
-      const ms = 1400 + Math.random()*700;
-      d.animate([
-        {transform:'translate(0,0) scale(1)', opacity:1, offset:0},
-        {transform:`translate(${dx}px,${dy*0.7}px) scale(0.9)`, opacity:0.85, offset:0.6},
-        {transform:`translate(${dx}px,${dy}px) scale(0.8)`, opacity:0}
-      ], {duration: ms, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards'});
-      setTimeout(()=>d.remove(), ms+200);
+      const ms = 1200 + Math.random()*600;
+      d.animate([{transform:'translate(0,0) scale(1)', opacity:1},{transform:`translate(${dx}px,${dy}px) scale(0.85)`, opacity:0}], {duration: ms, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards'});
+      setTimeout(()=>d.remove(), ms+120);
     }
   }
-  function popAnimal(x, y){
+  function popAnimalAt(x, y){
+    // enforce max-6 and non-overlap
+    let pos = {x, y};
+    // if no coords (keypress), find a free spot; if coords provided, also nudge if overlapping
+    const found = placeNonOverlapping();
+    if (found) pos = found;
+    else {
+      // if full and no place, remove oldest then place again
+      if (activePops.length >= MAX_POP) { removeOldest(); const retry = placeNonOverlapping(); if (retry) pos = retry; }
+      else return; // give up quietly
+    }
     const a = animals[(Math.random()*animals.length)|0];
-    const rx = x ?? (Math.random() * (innerWidth * 0.8) + innerWidth * 0.1);
-    const ry = y ?? (Math.random() * (innerHeight * 0.46) + innerHeight * 0.22);
     playAnimalSound(a.key);
+
     const node = document.createElement('div');
     node.className = 'pop';
-    node.style.left = rx + 'px';
-    node.style.top  = ry + 'px';
+    node.style.left = pos.x + 'px';
+    node.style.top  = pos.y + 'px';
+
     const bubble = document.createElement('div');
     bubble.className = 'bubble enter';
     bubble.style.borderRadius = 22 + Math.random()*12 + 'px';
     bubble.style.filter = `drop-shadow(0 16px 28px var(--shadow))`;
     bubble.style.borderColor = `hsla(${a.hue},70%,35%,.18)`;
     bubble.style.boxShadow += `, 0 0 0 10px hsla(${a.hue}, 90%, 80%, .22) inset`;
+
     const emoji = document.createElement('div'); emoji.className = 'emoji'; emoji.textContent = a.emoji;
     const name  = document.createElement('div'); name.className  = 'name';  name.textContent = a.name;
     const onom  = document.createElement('div'); onom.className  = 'onom';  onom.textContent = a.say;
+
     bubble.appendChild(emoji); bubble.appendChild(name); bubble.appendChild(onom);
     node.appendChild(bubble);
     stage.appendChild(node);
-    burst(rx, ry, a.hue);
-    setTimeout(() => { bubble.classList.remove('enter'); bubble.classList.add('exit'); setTimeout(()=>node.remove(), 800); }, 3000);
+
+    // housekeep max-6
+    if (activePops.length >= MAX_POP) removeOldest();
+    const r = Math.max(90, Math.min(140, Math.min(innerWidth, innerHeight)*0.12));
+    activePops.push({el:node, x:pos.x, y:pos.y, r});
+
+    burst(pos.x, pos.y, a.hue);
+
+    setTimeout(() => {
+      bubble.classList.remove('enter');
+      bubble.classList.add('exit');
+      setTimeout(()=> {
+        node.remove();
+        // remove from active list
+        const i = activePops.findIndex(p => p.el===node);
+        if (i>=0) activePops.splice(i,1);
+      }, 800);
+    }, 3000);
   }
 
   /* ===== PROCEDURAL CLOUDS ===== */
@@ -486,60 +506,33 @@
     const div = document.createElement('div');
     div.className = 'cloud';
     const type = types[(Math.random()*types.length)|0];
-    const inner = document.createElement('div');
-    inner.className = type;
+    const inner = document.createElement('div'); inner.className = type;
     const scale = 0.7 + Math.random()*1.4;
     div.style.transform = `translateX(-20vw) translateY(${(Math.random()*18)-6}vh) scale(${scale})`;
-    const dur = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMin')) +
-                Math.random()*(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMax')) - parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMin'))));
+    const min = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMin'));
+    const max = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMax'));
+    const dur = min + Math.random()*(max-min);
     div.style.animation = `wind-x ${dur}s linear forwards`;
     inner.style.animation = `wind-y ${8+Math.random()*10}s ease-in-out infinite`;
     div.appendChild(inner);
     cloudLayer.appendChild(div);
-    const ttl = dur*1000 + 2000;
-    setTimeout(()=>div.remove(), ttl);
+    setTimeout(()=>div.remove(), dur*1000 + 2000);
   }
   setInterval(()=>{ if (document.hidden) return; if (cloudLayer.childElementCount < 8) spawnCloud(); }, 2500);
   for(let i=0;i<5;i++) spawnCloud();
 
-  /* ===== SVG RUNNERS (realistic-ish ducks/chickens) ===== */
+  /* ===== SVG RUNNERS ===== */
   function duckSVG(color='#2c7a7b'){
-    return `
-    <svg viewBox="0 0 120 80" width="120" height="80" aria-label="Duck">
-      <ellipse cx="50" cy="60" rx="38" ry="12" fill="#00000018"/>
-      <g class="stride">
-        <ellipse cx="50" cy="40" rx="22" ry="14" fill="${color}"/>
-        <ellipse cx="70" cy="38" rx="18" ry="12" fill="${color}"/>
-        <path d="M20 42 q12 -6 24 0" stroke="${color}" stroke-width="6" fill="none"/>
-        <g class="flap"><path d="M56 28 q10 -8 22 -2 q-7 8 -18 12z" fill="${color}"/></g>
-        <circle cx="80" cy="30" r="8" fill="${color}"/>
-        <circle cx="83" cy="28" r="2" fill="#111"/>
-        <path d="M88 30 h10 l-6 6 h-8z" fill="#f59e0b"/>
-        <path d="M50 54 l-6 10 M58 54 l-4 10" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
-      </g>
-    </svg>`;
+    return `<svg viewBox="0 0 120 80" width="120" height="80" aria-label="Duck"><ellipse cx="50" cy="60" rx="38" ry="12" fill="#00000018"/><g class="stride"><ellipse cx="50" cy="40" rx="22" ry="14" fill="${color}"/><ellipse cx="70" cy="38" rx="18" ry="12" fill="${color}"/><path d="M20 42 q12 -6 24 0" stroke="${color}" stroke-width="6" fill="none"/><g class="flap"><path d="M56 28 q10 -8 22 -2 q-7 8 -18 12z" fill="${color}"/></g><circle cx="80" cy="30" r="8" fill="${color}"/><circle cx="83" cy="28" r="2" fill="#111"/><path d="M88 30 h10 l-6 6 h-8z" fill="#f59e0b"/><path d="M50 54 l-6 10 M58 54 l-4 10" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/></g></svg>`;
   }
   function chickenSVG(color='#b45309'){
-    return `
-    <svg viewBox="0 0 120 80" width="110" height="80" aria-label="Chicken">
-      <ellipse cx="50" cy="60" rx="36" ry="10" fill="#00000018"/>
-      <g class="stride">
-        <ellipse cx="48" cy="40" rx="20" ry="14" fill="#fef3c7" stroke="#eab308"/>
-        <ellipse cx="68" cy="38" rx="16" ry="12" fill="#fef3c7" stroke="#eab308"/>
-        <g class="flap"><path d="M56 28 q8 -8 18 -2 q-6 8 -14 12z" fill="#fde68a" stroke="#eab308"/></g>
-        <circle cx="78" cy="30" r="7" fill="#fef3c7" stroke="#eab308"/>
-        <circle cx="81" cy="28" r="2" fill="#111"/>
-        <path d="M86 30 h9 l-5 6 h-7z" fill="#f59e0b"/>
-        <path d="M48 54 l-6 10 M56 54 l-4 10" stroke="#b45309" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="75" cy="22" r="4" fill="#dc2626"/>
-      </g>
-    </svg>`;
+    return `<svg viewBox="0 0 120 80" width="110" height="80" aria-label="Chicken"><ellipse cx="50" cy="60" rx="36" ry="10" fill="#00000018"/><g class="stride"><ellipse cx="48" cy="40" rx="20" ry="14" fill="#fef3c7" stroke="#eab308"/><ellipse cx="68" cy="38" rx="16" ry="12" fill="#fef3c7" stroke="#eab308"/><g class="flap"><path d="M56 28 q8 -8 18 -2 q-6 8 -14 12z" fill="#fde68a" stroke="#eab308"/></g><circle cx="78" cy="30" r="7" fill="#fef3c7" stroke="#eab308"/><circle cx="81" cy="28" r="2" fill="#111"/><path d="M86 30 h9 l-5 6 h-7z" fill="#f59e0b"/><path d="M48 54 l-6 10 M56 54 l-4 10" stroke="#b45309" stroke-width="4" stroke-linecap="round"/><circle cx="75" cy="22" r="4" fill="#dc2626"/></g></svg>`;
   }
-  const runnerEmits = [duckSVG, chickenSVG];
+  const runnerMakers = [duckSVG, chickenSVG];
   function spawnRunner(){
     const r = document.createElement('div');
     r.className = 'runner';
-    const maker = runnerEmits[(Math.random()*runnerEmits.length)|0];
+    const maker = runnerMakers[(Math.random()*runnerMakers.length)|0];
     r.innerHTML = maker();
     const paths = ['path-low','path-mid','path-loop','path-pond'];
     const pick = paths[(Math.random()*paths.length)|0];
@@ -556,10 +549,15 @@
   /* ===== INPUT ===== */
   function triggerFromEvent(e){
     const isPointer = ('clientX' in e);
-    const rx = isPointer ? e.clientX : (Math.random()*innerWidth*0.8 + innerWidth*0.1);
-    const ry = isPointer ? e.clientY : (Math.random()*innerHeight*0.46 + innerHeight*0.22);
-    popAnimal(rx, ry);
+    if (isPointer) popAnimalAt(e.clientX, e.clientY);
+    else {
+      // keypress → compute non-overlapping placement
+      const slot = placeNonOverlapping();
+      if (slot) popAnimalAt(slot.x, slot.y);
+      else if (activePops.length >= MAX_POP) { removeOldest(); const retry = placeNonOverlapping(); if (retry) popAnimalAt(retry.x, retry.y); }
+    }
   }
+
   async function begin(){
     ensureAudio();
     await fetchManifest();
@@ -567,25 +565,72 @@
     gate.style.display='none';
     hint.style.opacity = 0.75;
     setTimeout(()=>hint.remove(), 2200);
-    popAnimal(innerWidth*0.58, innerHeight*0.42);
+    const slot = placeNonOverlapping(); if (slot) popAnimalAt(slot.x, slot.y);
   }
+
   startBtn.addEventListener('click', begin);
   window.addEventListener('pointerdown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
-  window.addEventListener('keydown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
+  window.addEventListener('keydown',   (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
 
   /* ===== FULLSCREEN & SAFETY ===== */
-  fsBtn.addEventListener('click', async () => {
-    try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch {}
-  });
+  fsBtn.addEventListener('click', async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch {} });
   window.addEventListener('contextmenu', e => e.preventDefault());
+
+  /* ===== BOOK / GALLERY ===== */
+  function openBook(){ book.style.display='flex'; }
+  function closeBook(){ book.style.display='none'; }
+  bookBtn.addEventListener('click', openBook);
+  bookClose.addEventListener('click', closeBook);
+
+  // Build book grid
+  animals.forEach(a=>{
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.innerHTML = `<div class="emo">${a.emoji}</div><div class="nm">${a.name}</div>`;
+    tile.addEventListener('click', ()=>{
+      const data = BOOK[a.key] || {title:a.name,intro:"This is a friendly farm animal.",habitat:"On the farm.",facts:["It makes a fun sound!"]};
+      bookContent.innerHTML = `
+        <h2>${a.emoji} ${data.title}</h2>
+        <p>${data.intro}</p>
+        <p><strong>Home:</strong> ${data.habitat}</p>
+        <p><strong>Sound:</strong> “${a.say}”</p>
+        <p><strong>Fun facts:</strong></p>
+        <ul>${data.facts.map(f=>`<li>${f}</li>`).join('')}</ul>
+        <p style="margin-top:12px; opacity:.8">Tip: With a grown-up, tap the screen to hear the sound.</p>
+      `;
+    });
+    bookGrid.appendChild(tile);
+  });
 })();
 </script>
 
 <!--
-  SOUND LIBRARY:
-  - assets/sfx/<animal>/<files>
-  - assets/sfx/manifest.json lists filenames
-  - 3s cap; latest sound takes over; silly fallback toggle
+  SOUND LIBRARY (folders per animal):
+  assets/sfx/manifest.json
+  assets/sfx/cow/      cow_01.mp3, cow_02.ogg, ...
+  assets/sfx/pig/
+  assets/sfx/sheep/
+  assets/sfx/duck/
+  assets/sfx/chicken/
+  assets/sfx/horse/
+  assets/sfx/goat/
+  assets/sfx/dog/
+  assets/sfx/cat/
+  assets/sfx/rabbit/
+
+  manifest.json example:
+  {
+    "cow": ["cow_01.mp3","cow_02.ogg"],
+    "pig": ["pig_01.mp3"],
+    "sheep": [],
+    "duck": ["duck_01.mp3"],
+    "chicken": ["chicken_01.mp3","chicken_02.mp3"],
+    "horse": [],
+    "goat": [],
+    "dog": [],
+    "cat": [],
+    "rabbit": []
+  }
 -->
 </body>
 </html>
