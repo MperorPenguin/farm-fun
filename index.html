@@ -278,6 +278,37 @@
   };
 
   /* ===== DOM ===== */
+  
+/* ===== Path base autodetect for GitHub Pages / subfolders ===== */
+function joinPath(base, path){
+  if (!base || base === '/') return path.replace(/^\/+/, '');
+  return base.replace(/\/+$/,'/') + path.replace(/^\/+/, '');
+}
+const BASES = (() => {
+  // Try current directory first, then site root, then "/farm-fun/" variants.
+  const p = location.pathname;
+  const baseDir = p.endsWith('/') ? p : p.replace(/[^/]+$/, '');
+  const set = new LinkedHashSet([
+    baseDir,            // e.g. /farm-fun/
+    '/',                // site root
+    baseDir + 'farm-fun/', // /farm-fun/farm-fun/ (just in case)
+    '/farm-fun/'       // explicit common repo name
+  ]);
+  // LinkedHashSet utility (preserve insertion order, dedupe)
+  function LinkedHashSet(arr){ const m=new Map(); arr.forEach(v=>m.set(v,true)); this.values=()=>[...m.keys()]; }
+  return set.values();
+})();
+async function tryFetchAnyBase(relPath, opts){
+  for (const base of BASES){
+    const url = joinPath(base, relPath);
+    try{
+      const r = await fetch(url, opts);
+      if (r.ok) return { ok:true, response:r, url };
+    }catch(_){}
+  }
+  return { ok:false, response:null, url: relPath };
+}
+
   const gate = document.getElementById('gate');
   const startBtn = document.getElementById('startBtn');
   const stage = document.getElementById('stage');
