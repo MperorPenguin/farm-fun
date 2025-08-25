@@ -2,729 +2,684 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-<title>Farm Fun — Tap & Learn</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Farm Fun — Learn & Play (Prototype + Builder)</title>
 <style>
   :root{
-    --skyTop:#bfe9ff; --skyMid:#aee0ff; --fieldFar:#92dc7a;
-    --hillFar:#6fb866; --hillMid:#65ad5c; --hillNear:#5aa454;
-    --pond:#97d9ff;
-    --barnBody:#b23a48; --barnBodyShade:#992d3a; --barnTrim:#7a2028; --barnRoof:#8a2731;
-    --millPost:#cfcfcf; --millBladeA:#e9ecef; --millBladeB:#dfe4ea;
-    --wood:#c79a69; --woodDark:#a97e52;
-    --panel:#ffffffee; --ink:#1f2937; --shadow:#00000024; --sun:#ffd166;
-
-    --cloudMin: 32s; --cloudMax: 85s;
+    --ink:#111827; --panel:#ffffffee; --shadow:#00000026;
+    --brand:#0ea5e9; --brand2:#22c55e; --accent:#f59e0b; --danger:#ef4444; --muted:#6b7280;
+    --skyTop:#bfe9ff; --skyMid:#aee0ff; --field:#92dc7a;
+    --card:#fff; --bg:#f3f4f6;
   }
-
-  /* Viewport robustness for iOS Safari & rotation */
-  html, body { height: 100%; margin: 0; }
+  html,body{height:100%;margin:0}
   body{
-    min-height: 100vh;
-    min-height: 100svh; /* iOS 15+ */
-    min-height: 100dvh; /* modern browsers */
     font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
     color:var(--ink);
-    background:linear-gradient(180deg,var(--skyTop) 0 45%, var(--skyMid) 45% 60%, var(--fieldFar) 60% 100%);
-    overflow:hidden;
-    touch-action: manipulation;
+    background: linear-gradient(180deg,var(--skyTop) 0 45%, var(--skyMid) 45% 62%, var(--field) 62% 100%);
+    min-height:100svh; min-height:100dvh; overflow:hidden;
+    --pad: clamp(12px, 2vw, 20px);
   }
-
-  /* Layers */
-  .layer{position:absolute; inset:auto 0; pointer-events:none}
-  .sky-sun{position:absolute; right:4vw; top:5vh; width:160px; height:160px; border-radius:50%;
-           background:radial-gradient(circle at 45% 45%, #fff8 0 18%, var(--sun) 19% 100%);
-           box-shadow:0 0 80px 30px #ffd16666; z-index:0; filter:blur(.2px);}
-  .clouds{top:6vh; bottom:auto; z-index:1;}
-  .hills-far{bottom:34vh; z-index:1}
-  .hills-mid{bottom:28vh; z-index:2}
-  .hills-near{bottom:22vh; z-index:3}
-  .water{bottom:18vh; z-index:3}
-  .buildings{bottom:19vh; z-index:4}
-  .stage{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:7;}
-
-  .hills-far .band, .hills-mid .band, .hills-near .band{
-    position:absolute; left:-10vw; right:-10vw; height:30vh; border-radius:50%;
+  /* App shell */
+  .nav{
+    position:fixed; left:0; right:0; top:0; z-index:10;
+    display:flex; align-items:center; gap:8px; padding:10px var(--pad);
+    background:var(--panel); box-shadow:0 8px 24px var(--shadow); border-bottom:1px solid #e5e7eb;
   }
-  .hills-far .band{background:radial-gradient(120% 70% at 50% 100%, var(--hillFar) 0 60%, transparent 61%)}
-  .hills-mid .band{background:radial-gradient(120% 70% at 50% 100%, var(--hillMid) 0 60%, transparent 61%)}
-  .hills-near .band{background:radial-gradient(120% 70% at 50% 100%, var(--hillNear) 0 60%, transparent 61%)}
-
-  .water .pond{
-    position:absolute; left:62vw; width:24vw; height:9vw; bottom:0;
-    background:radial-gradient(60% 70% at 50% 50%, #ccecff 0 60%, var(--pond) 61% 100%);
-    border-radius:50%; box-shadow:0 10px 0 #00000010;
+  .logo{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px; cursor:pointer; user-select:none}
+  .logo .emoji{font-size:24px}
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{border:0; background:#e5e7eb; padding:10px 12px; border-radius:10px; font-weight:700; cursor:pointer; box-shadow:0 3px 0 #00000017}
+  .tab.primary{background:#111827; color:#fff}
+  .tab.alt{background:#0f172a; color:#fff}
+  .tab.warn{background:var(--accent); color:#000}
+  .grow{flex:1}
+  .right{display:flex; gap:8px}
+  .hint{font-size:12px; opacity:.7}
+  .wrap{
+    position:fixed; inset:64px 0 0 0; padding: var(--pad);
+    display:grid; place-items:stretch; overflow:auto;
   }
-  .water .reeds{
-    position:absolute; left:calc(62vw + 5vw); bottom:1.6vw; width:12vw; height:6vw;
-    background:repeating-linear-gradient(90deg,#6fb866 0 3px, transparent 3px 8px);
-    transform:skewX(-10deg); opacity:.85;
+  .scene{
+    position:relative; min-height: calc(100svh - 64px - var(--pad) - env(safe-area-inset-bottom,0px));
+    border-radius:18px; background:#0000; overflow:hidden;
   }
+  .card{background:var(--card); border-radius:16px; box-shadow:0 14px 40px var(--shadow); padding:clamp(12px,2vw,18px)}
+  .row{display:flex; gap:12px; flex-wrap:wrap}
+  .grid{display:grid; gap:12px}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width: 740px){ .grid.cols-2,.grid.cols-3,.grid.cols-4{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 520px){ .grid.cols-2,.grid.cols-3,.grid.cols-4{ grid-template-columns: repeat(1, minmax(0,1fr)); } }
 
-  /* Clouds */
-  .cloud{position:absolute; top:0; will-change:transform, opacity; opacity:.95; filter:drop-shadow(0 8px 0 #0000000c)}
-  .blob{ width:200px; height:80px; background:#fff; border-radius:40px; box-shadow: 60px 0 0 14px #fff, 120px 0 0 10px #fff, -40px 0 0 10px #fff;}
-  .wispy{width:240px; height:56px; background:linear-gradient(90deg,#fff 0 60%, #fff8 61%); border-radius:30px/20px}
-  .puffy{width:200px; height:70px; background:#fff; border-radius:35px; box-shadow: 0 0 0 10px #fff inset;}
-  @keyframes wind-x { from{ transform: translateX(-20vw)} to{ transform: translateX(120vw)} }
-  @keyframes wind-y { 0%{transform:translateY(-1vh)} 50%{transform:translateY(1.2vh)} 100%{transform:translateY(-1vh)} }
-
-  /* Buildings (responsive via clamp) + image fallback system */
-  .barnWrap{
-    position:absolute; left:7vw; bottom:0;
-    width: clamp(220px, 24vw, 420px);
-    transform-origin: bottom left;
+  /* Farm Book */
+  .book-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); gap:12px}
+  .tile{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:14px; border-radius:14px; background:#fff; box-shadow:0 6px 0 #00000010;
+    cursor:pointer; user-select:none; transition:transform .15s ease, box-shadow .15s ease;
   }
-  .windmillWrap{
-    position:absolute; left:25vw; bottom:0;
-    height: clamp(180px, 26vh, 360px);
-    transform-origin: bottom left;
-  }
-  .coop{
-    position:absolute; bottom:0; width: clamp(120px, 14vw, 200px); height: clamp(90px, 10vw, 150px);
-    background:var(--wood); border-radius:10px; left:15vw; transform:translateY(8px);
-    box-shadow:inset 0 0 0 6px var(--woodDark), 0 6px 0 #00000012;
-  }
-  .coop:before{content:""; position:absolute; left:0; right:0; margin:auto; top:-56px; width:0; height:0;
-               border-left:90px solid transparent; border-right:90px solid transparent; border-bottom:56px solid var(--wood);}
-  .coop.duck{left:70vw}
+  .tile:hover,.tile:active{ transform: translateY(-2px) scale(1.02); box-shadow:0 8px 0 #00000018; }
+  .tile .img{width:96px; height:96px; background:#f3f4f6; border-radius:12px; display:grid; place-items:center; overflow:hidden}
+  .tile .img img{ width:100%; height:100%; object-fit:contain }
+  .tile .nm{font-weight:800; margin-top:8px}
 
-  /* Image layers prefer PNGs; SVGs act as fallback */
-  .scene-img{ width:100%; height:auto; display:none; image-rendering:auto; filter: drop-shadow(0 6px 0 #00000018); }
-  .fallback{ width:100%; height:auto; display:block; }
-  .coop .scene-img{ width:100%; height:auto; display:none; }
-  .coop.has-img { background:none; box-shadow:none; transform: translateY(0); }
+  /* Profile */
+  .profile{display:grid; grid-template-columns: 1fr 1.2fr; gap:16px}
+  @media (max-width: 860px){ .profile{ grid-template-columns: 1fr; } }
+  .bigimg{background:#fff; border-radius:14px; padding:8px; display:grid; place-items:center; min-height:240px}
+  .bigimg img{ max-width:100%; max-height:46vh; object-fit:contain }
+  .btn{border:0; border-radius:10px; padding:12px 14px; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #00000018}
+  .btn.play{ background:var(--brand); color:#fff }
+  .btn.secondary{ background:#e5e7eb }
+  .btn.ghost{ background:#f3f4f6 }
+  .pill{display:inline-flex; gap:8px; padding:8px 10px; border-radius:10px; background:#f3f4f6; align-items:center}
+  .fact{padding-left:18px}
+  .ok{color:var(--brand2); font-weight:800}
+  .oops{color:var(--danger); font-weight:800}
 
-  /* Pops */
-  .pop{position:absolute; display:grid; place-items:center; width:1px; height:1px; transform:translate(-50%,-50%);}
-  .bubble{
-    display:grid; place-items:center; padding:26px 28px; border-radius:24px;
-    background: white; box-shadow:0 18px 50px var(--shadow), inset 0 0 0 6px #0000000e;
-    will-change: transform, opacity, filter;
-  }
-  .emoji{font-size: clamp(84px, 16vw, 180px); line-height:1}
-  .name{font-weight:800; margin-top:10px; font-size: clamp(16px, 3.5vw, 26px)}
-  .onom{font-size:clamp(13px, 2.8vw, 18px); opacity:.8; margin-top:4px}
-  .enter{ animation: enter 1000ms cubic-bezier(.2,.7,.2,1) forwards; }
-  @keyframes enter{ 0%{ transform: translateY(18px) scale(.7) rotate(-2deg); opacity:0; filter:blur(2px)} 60%{ transform: translateY(-12px) scale(1.08) rotate(1deg); opacity:1; filter:blur(0)} 100%{ transform: translateY(0) scale(1); opacity:1} }
-  .exit{ animation: exit 800ms cubic-bezier(.2,.7,.2,1) forwards; }
-  @keyframes exit{ 0%{ transform: translateY(0) scale(1); opacity:1} 100%{ transform: translateY(-24px) scale(.98); opacity:0} }
-  .confetti{position:fixed; width:10px; height:10px; border-radius:50%; pointer-events:none;}
+  /* Games */
+  .choices{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:12px; margin-top:12px}
+  .choice{background:#fff; border-radius:14px; padding:10px; text-align:center; cursor:pointer; box-shadow:0 6px 0 #00000012; transition:transform .15s}
+  .choice:hover{ transform: translateY(-2px) }
+  .choice .img{ width:120px; height:120px; margin:0 auto; background:#f3f4f6; border-radius:12px; display:grid; place-items:center; overflow:hidden }
+  .choice .img img{ width:100%; height:100%; object-fit:contain }
 
-  /* HUD, gate, book */
-  .hud{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(2vh + env(safe-area-inset-bottom, 0px)); z-index:9;
-       display:flex; gap:10px; align-items:center; background:var(--panel);
-       padding:12px 16px; border-radius:14px; backdrop-filter: blur(6px); pointer-events:auto}
-  .hud button, .hud .toggle{border:0; border-radius:10px; padding:12px 16px; cursor:pointer; font-weight:700; box-shadow:0 4px 0 #00000014; background:#e5e7eb;}
-  .hud button.primary{background:#111827; color:white;}
-  .label{font-size:12px; opacity:.8; margin-left:6px}
-  .range{appearance:none; height:10px; border-radius:6px; background:#e5e7eb; outline:none; width:140px;}
-  .range::-webkit-slider-thumb{appearance:none; width:20px; height:20px; border-radius:50%; background:#111827}
-  .hint{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); font-size:clamp(18px,3.2vw,24px); background:var(--panel); padding:10px 14px; border-radius:12px; animation: pulse 2.2s ease-in-out infinite; box-shadow:0 8px 24px #0000001c; z-index:8;}
-  @keyframes pulse{0%,100%{opacity:.6} 50%{opacity:1}}
-  .gate{position:fixed; inset:0; display:grid; place-items:center; background:#0008; z-index:10}
-  .card{background:white; padding:28px; border-radius:18px; text-align:center; width:min(760px,92vw); box-shadow:0 20px 60px #00000033;}
-  .title{font-size:clamp(28px,5vw,40px); margin:0 0 8px} .subtitle{margin:0 0 16px; opacity:.8}
-  .big{font-size:clamp(20px,3.6vw,28px); padding:14px 18px; border-radius:12px}
+  /* Drag & Drop (What do I eat?) */
+  .foods{display:flex; flex-wrap:wrap; gap:10px}
+  .food{display:grid; place-items:center; width:88px; height:88px; border-radius:12px; background:#fff; box-shadow:0 6px 0 #00000012; cursor:grab}
+  .dropzone{border:2px dashed #cbd5e1; border-radius:12px; padding:10px; min-height:160px; display:grid; place-items:center; color:#64748b}
+  .dz-hit{border-color: var(--brand)}
 
-  .book{position:fixed; inset:0; background:#0008; z-index:10; display:none; align-items:center; justify-content:center; pointer-events:auto;}
-  .book .sheet{background:white; width:min(900px,95vw); max-height:86svh; max-height:86dvh; border-radius:20px; box-shadow:0 20px 60px #00000033; overflow:hidden; display:grid; grid-template-columns: 1fr 2fr; gap:0; position:relative;}
-  .book .left{background:#f9fafb; padding:18px; overflow:auto;}
-  .book .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap:12px;}
-  .book .tile{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; border-radius:16px; background:#fff; box-shadow:0 6px 0 #0000000e; cursor:pointer; user-select:none; transition: transform .15s ease, box-shadow .15s ease, outline-color .15s ease;}
-  .book .tile .emo{font-size:44px; line-height:1} .book .tile .nm{font-weight:800; margin-top:6px; font-size:14px;}
-  .book .tile:hover, .book .tile:focus-visible, .book .tile:active{ transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 0 #00000014, 0 0 0 3px #11182722 inset; outline: none;}
-  .book .right{padding:22px; overflow:auto;}
-  .book h2{margin:0 0 6px} .book p{margin:8px 0} .book ul{margin:8px 0 0 18px}
-  .book .close{position:absolute; top:14px; right:16px; border:0; background:#111827; color:#fff; border-radius:10px; padding:10px 12px; cursor:pointer; box-shadow:0 4px 0 #00000020}
-  .book #bookMin{ right:110px; background:#374151; }
+  /* Habitat */
+  .hab{ position:relative; border-radius:14px; overflow:hidden; background:linear-gradient(#bfe9ff, #aee0ff 60%, #92dc7a 60%) }
+  .zone{ position:absolute; border-radius:12px; outline:2px dashed #ffffff99; outline-offset:-2px; cursor:pointer; background:#0000 }
+  .zone:hover{ outline-color:#fff }
 
-  @media (max-width: 560px){
-    .book .sheet{ grid-template-columns: 1fr; }
-    .book .right{ padding:18px 16px; }
-  }
+  /* Stickers */
+  .sticker-board{ position:relative; border-radius:14px; background:#fff; min-height:340px; overflow:hidden; }
+  .stickers{ display:flex; flex-wrap:wrap; gap:10px; margin-top:8px}
+  .sticker{ width:80px; height:80px; border-radius:12px; background:#f3f4f6; display:grid; place-items:center; cursor:grab; box-shadow:0 4px 0 #00000012; }
+  .sticker img{ max-width:100%; max-height:100%; object-fit:contain }
+  .placed{ position:absolute; width:100px; height:100px; transform:translate(-50%,-50%); cursor:move }
 
-  button:focus-visible, input:focus-visible{outline:3px solid #11182788; outline-offset:2px}
+  /* Story */
+  .story{ display:grid; gap:10px }
+  .story-slide{ display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; align-items:center }
+  @media (max-width: 900px){ .story-slide{ grid-template-columns: 1fr; } }
+  .story .img{ background:#fff; border-radius:14px; padding:10px; min-height:220px; display:grid; place-items:center }
+  .story .img img{ max-width:100%; max-height:46vh; object-fit:contain }
 
-  /* Diagnostics panel */
-  .diag {
-    position: fixed; right: 10px; top: 10px; z-index: 9999;
-    max-width: min(92vw, 520px); max-height: 70vh; overflow: auto;
-    background: #111827; color: #fff; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-    padding: 12px 14px; border-radius: 10px; box-shadow: 0 14px 40px #0008; display:none;
-  }
-  .diag pre { white-space: pre-wrap; word-break: break-word; margin: 0 }
+  /* Builder */
+  .builder{ position:fixed; inset:0; background:#0008; display:none; align-items:center; justify-content:center; z-index:20 }
+  .builder .panel{ background:#fff; width:min(1100px,96vw); max-height:92svh; border-radius:16px; box-shadow:0 24px 80px #0008; display:grid; grid-template-columns: 300px 1fr; overflow:hidden }
+  @media (max-width: 960px){ .builder .panel{ grid-template-columns: 1fr; } }
+  .b-left{ background:#f8fafc; padding:12px; overflow:auto }
+  .b-right{ padding:12px; overflow:auto }
+  .uploader{ border:2px dashed #94a3b8; border-radius:14px; padding:14px; text-align:center; cursor:pointer; background:#fff }
+  .preview{ display:grid; grid-template-columns:repeat(auto-fill, minmax(90px,1fr)); gap:10px; margin-top:10px }
+  .thumb{ background:#f3f4f6; border-radius:10px; display:grid; place-items:center; height:90px; overflow:hidden; position:relative }
+  .thumb img{ max-width:100%; max-height:100%; object-fit:contain }
+  .thumb .cap{ position:absolute; left:6px; bottom:6px; font-size:10px; background:#0009; color:#fff; padding:2px 6px; border-radius:6px }
+  .builder .toolbar{ display:flex; gap:8px; margin:10px 0; flex-wrap:wrap }
+  .mini{ font-size:12px; padding:8px 10px; border-radius:8px; border:0; cursor:pointer; font-weight:800; box-shadow:0 3px 0 #00000012 }
+  .mini.primary{ background:var(--brand); color:#fff }
+  .mini.ghost{ background:#e5e7eb }
+  .mini.warn{ background:var(--accent) }
+  .mini.danger{ background:var(--danger); color:#fff }
+
+  /* Parent mode badge */
+  .badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:6px 8px; border-radius:8px; background:#e5e7eb; }
 </style>
 </head>
 <body>
 
-<!-- Parallax scene -->
-<div class="sky-sun"></div>
-<div class="layer clouds" id="cloudLayer"></div>
-<div class="layer hills-far"><div class="band" style="transform:translateY(10vh) scale(1.15)"></div></div>
-<div class="layer hills-mid"><div class="band" style="transform:translateY(6vh) scale(1.06)"></div></div>
-<div class="layer hills-near"><div class="band" style="transform:translateY(2vh) scale(1.02)"></div></div>
-<div class="layer water"><div class="pond"></div><div class="reeds"></div></div>
-
-<div class="layer buildings">
-  <!-- Barn (image if present, else SVG fallback) -->
-  <div class="barnWrap">
-    <img class="scene-img" id="imgBarn" alt="Barn" />
-    <svg class="fallback" viewBox="0 0 260 200" aria-label="Barn" preserveAspectRatio="xMidYMax meet">
-      <ellipse cx="120" cy="192" rx="110" ry="8" fill="#00000018"/>
-      <rect x="30" y="70" width="200" height="120" rx="6" fill="url(#barnShade)"/>
-      <rect x="30" y="70" width="200" height="120" rx="6" fill="var(--barnBody)" opacity=".93"/>
-      <path d="M20,82 L130,20 L240,82 Z" fill="var(--barnRoof)" stroke="var(--barnTrim)" stroke-width="6" />
-      <rect x="100" y="110" width="60" height="80" fill="#fff" stroke="var(--barnTrim)" stroke-width="6"/>
-      <path d="M100 150h60 M100 110l60 80 M160 110l-60 80" stroke="var(--barnTrim)" stroke-width="6" fill="none"/>
-      <rect x="115" y="90" width="30" height="25" fill="#fff" stroke="var(--barnTrim)" stroke-width="5"/>
-      <defs><linearGradient id="barnShade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--barnBodyShade)"/><stop offset="1" stop-color="var(--barnBody)"/></linearGradient></defs>
-    </svg>
+<!-- Top Nav -->
+<div class="nav">
+  <div class="logo" id="logo" title="Long-press to toggle Parent Mode">
+    <div class="emoji">🐮</div> <div>Farm Fun</div>
+    <span class="badge" id="pmBadge" style="display:none;">Parent Mode</span>
   </div>
-
-  <!-- Windmill (image if present, else SVG fallback) -->
-  <div class="windmillWrap">
-    <img class="scene-img" id="imgWindmill" alt="Windmill" />
-    <svg class="fallback" viewBox="0 0 120 220" aria-label="Windmill" preserveAspectRatio="xMidYMax meet">
-      <ellipse cx="60" cy="210" rx="40" ry="6" fill="#00000018"/>
-      <rect x="52" y="60" width="16" height="140" rx="6" fill="var(--millPost)" stroke="#d1d5db" stroke-width="2"/>
-      <rect x="35" y="40" width="50" height="30" rx="6" fill="#e5e7eb" stroke="#d1d5db" stroke-width="2"/>
-      <g transform="translate(60,55)">
-        <circle r="6" fill="#bdbdbd"/>
-        <g style="animation:spin 6s linear infinite; transform-origin:0 0">
-          <path d="M0 0 h50 v10 h-50z" fill="var(--millBladeA)" stroke="#d1d5db"/>
-          <path d="M0 0 v-50 h10 v50z" fill="var(--millBladeB)" stroke="#d1d5db"/>
-          <path d="M0 0 h-50 v-10 h50z" fill="var(--millBladeA)" stroke="#d1d5db"/>
-          <path d="M0 0 v50 h-10 v-50z" fill="var(--millBladeB)" stroke="#d1d5db"/>
-        </g>
-      </g>
-    </svg>
+  <div class="tabs">
+    <button class="tab primary" data-view="book">Farm Book</button>
+    <button class="tab" data-view="guess">Sound & Guess</button>
+    <button class="tab" data-view="eat">What Do I Eat?</button>
+    <button class="tab" data-view="habitat">Habitat Explorer</button>
+    <button class="tab" data-view="stickers">Sticker Board</button>
+    <button class="tab" data-view="story">Mini Story</button>
   </div>
-
-  <!-- Coops -->
-  <div class="coop chicken" title="Chicken coop">
-    <img class="scene-img" id="imgCoopChicken" alt="Chicken coop" />
-  </div>
-  <div class="coop duck" title="Duck coop">
-    <img class="scene-img" id="imgCoopDuck" alt="Duck coop" />
+  <div class="grow"></div>
+  <div class="right">
+    <button class="tab alt" id="openBuilder">Open Builder</button>
+    <span class="hint">Images are your PNGs. Sounds: assets/sfx/&lt;animal&gt;/*.wav/mp3/ogg</span>
   </div>
 </div>
 
-<!-- Interactive pops -->
-<div class="stage" id="stage" aria-live="polite"></div>
+<!-- Page wrap -->
+<div class="wrap">
+  <div class="scene" id="view"></div>
+</div>
 
-<!-- HUD + Start -->
-<div class="hint" id="hint">Tap or press any key 🐮</div>
-<div class="gate" id="gate" aria-modal="true" role="dialog">
-  <div class="card">
-    <h1 class="title">Farm Fun</h1>
-    <p class="subtitle">Tap or press any key. Sounds max 3s; newest sound takes over. Touch = keypress.</p>
-    <button id="startBtn" class="big">Start</button>
-    <div class="tip" style="margin-top:10px; font-size:12px; opacity:.75">
-      Sounds live in <code>assets/sfx/&lt;animal&gt;/</code>. Filenames like <code>cat_01.wav</code>, <code>cat-02.mp3</code> work automatically.
+<!-- Builder Modal -->
+<div class="builder" id="builder">
+  <div class="panel">
+    <div class="b-left">
+      <h3 style="margin:6px 0 8px">Assets</h3>
+      <div class="card">
+        <div class="uploader" id="dropZone">
+          Drag & drop PNGs here (or click)
+          <input type="file" id="fileInput" accept="image/png" multiple style="display:none">
+        </div>
+        <p style="font-size:12px; color:#475569; margin:8px 0 0">
+          Name files as <code>cow.png</code>, <code>chicken.png</code>, <code>barn.png</code>, <code>coop.png</code>, <code>pond.png</code>, <code>tree_01.png</code>, etc.
+        </p>
+      </div>
+      <div class="toolbar">
+        <button class="mini primary" id="saveAssets">Save to Browser</button>
+        <button class="mini ghost" id="clearAssets">Clear Saved</button>
+        <button class="mini warn" id="exportBuild">Export Build (single HTML)</button>
+        <button class="mini" id="closeBuilder">Close</button>
+      </div>
+      <div class="card">
+        <div class="badge" style="background:#e0f2fe;color:#075985">Tip</div>
+        <p style="font-size:12px; color:#475569">Saved assets are stored locally (localStorage). Export build bundles them as data‑URLs.</p>
+      </div>
     </div>
-  </div>
-</div>
-<div class="hud" aria-label="controls">
-  <button id="fsBtn" class="primary" title="Full screen">Full screen</button>
-  <span class="label">Volume</span><input id="vol" class="range" type="range" min="0" max="1" step="0.01" value="0.6" />
-  <button class="toggle" id="quietBtn" title="Mute all sounds">Quiet: Off</button>
-  <button class="toggle" id="sillyBtn" title="Enable/disable silly fallback">Silly sound: On</button>
-  <button id="bookBtn" class="toggle" title="Open the Farm Book">📖 Farm Book</button>
-  <button id="diagBtn" class="toggle" title="Show diagnostics">Diagnostics</button>
-</div>
-
-<!-- Book modal -->
-<div class="book" id="book">
-  <button class="close" id="bookClose">Close ✕</button>
-  <button class="close" id="bookMin">Minimise ▾</button>
-  <div class="sheet">
-    <div class="left"><div class="grid" id="bookGrid"></div></div>
-    <div class="right" id="bookContent">
-      <h2>Tap an animal to learn</h2>
-      <p>With a grown-up, explore sounds, homes, and fun little facts. Big buttons, big smiles.</p>
+    <div class="b-right">
+      <h3 style="margin:6px 0 8px">Preview</h3>
+      <div class="grid cols-2">
+        <div class="card">
+          <h4 style="margin:4px 0 10px">Animals</h4>
+          <div class="preview" id="prevAnimals"></div>
+        </div>
+        <div class="card">
+          <h4 style="margin:4px 0 10px">Scene</h4>
+          <div class="preview" id="prevScene"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <h4 style="margin:0 0 8px">Current JSON (read‑only)</h4>
+        <pre id="jsonDump" style="white-space:pre-wrap; font:12px/1.4 ui-monospace,Menlo,monospace; background:#0f172a; color:#e2e8f0; padding:10px; border-radius:10px; max-height:260px; overflow:auto"></pre>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-(() => {
-  /* ===== DATA ===== */
-  const animals = [
-    {name:'Cow', emoji:'🐮', say:'Moo!',    hue:20,  key:'cow'},
-    {name:'Pig', emoji:'🐷', say:'Oink!',   hue:340, key:'pig'},
-    {name:'Sheep', emoji:'🐑', say:'Baa!',  hue:70,  key:'sheep'},
-    {name:'Duck', emoji:'🦆', say:'Quack!', hue:160, key:'duck'},
-    {name:'Chicken', emoji:'🐔', say:'Cluck!', hue:35, key:'chicken'},
-    {name:'Horse', emoji:'🐴', say:'Neigh!', hue:15, key:'horse'},
-    {name:'Goat', emoji:'🐐', say:'Maa!',   hue:60,  key:'goat'},
-    {name:'Dog', emoji:'🐶', say:'Woof!',   hue:30,  key:'dog'},
-    {name:'Cat', emoji:'🐱', say:'Meow!',   hue:300, key:'cat'},
-    {name:'Rabbit', emoji:'🐰', say:'Boing!', hue:200, key:'rabbit'},
-  ];
-  const DEFAULT_MANIFEST = Object.fromEntries(animals.map(a=>[a.key, []]));
-  const BOOK = {
-    cow:{title:"Cow",intro:"Cows say “moo!” and love to munch grass.",habitat:"Fields and barns.",facts:["A baby cow is a calf.","Cows chew slowly—chomp, chomp!","They make milk."]},
-    pig:{title:"Pig",intro:"Pigs say “oink!” and like soft, squishy mud.",habitat:"Sties on a farm.",facts:["Baby pigs are piglets.","Pigs are smart and curious.","Mud keeps them cool."]},
-    sheep:{title:"Sheep",intro:"Sheep say “baa!” and wear fluffy wool coats.",habitat:"Grassy hills and fields.",facts:["A group is a flock.","Baby sheep are lambs.","Wool keeps us warm."]},
-    duck:{title:"Duck",intro:"Ducks say “quack!” and splash in water.",habitat:"Ponds and streams.",facts:["Duck feet are webbed.","Ducklings follow in a line.","They shake water off—splish splash!"]},
-    chicken:{title:"Chicken",intro:"Chickens say “cluck!” and peck-peck for food.",habitat:"Coops and yards.",facts:["Baby chickens are chicks.","Roosters say “cock-a-doodle-doo!”.","Chickens love grains."]},
-    horse:{title:"Horse",intro:"Horses say “neigh!” and run fast.",habitat:"Stables and fields.",facts:["Baby horses are foals.","Horses wear shoes—clip, clop!","They love hay."]},
-    goat:{title:"Goat",intro:"Goats say “maa!” and like to climb.",habitat:"Hilly pens and fields.",facts:["Baby goats are kids.","Goats have beards!","They’re great climbers."]},
-    dog:{title:"Dog",intro:"Dogs say “woof!” and wag their tails.",habitat:"Homes and farms.",facts:["A puppy is a baby dog.","Dogs are helpful friends.","They love to play."]},
-    cat:{title:"Cat",intro:"Cats say “meow!” and curl up cozy.",habitat:"Homes and barns.",facts:["Kittens are baby cats.","Cats purr when happy.","They chase little bugs."]},
-    rabbit:{title:"Rabbit",intro:"Rabbits hop and have long ears.",habitat:"Burrows and gardens.",facts:["Baby rabbits are kits.","They nibble greens.","They thump with their feet!"]},
-  };
+/* ====== DATA ====== */
+const DEFAULT_ANIMALS = [
+  { key:'cow', name:'Cow', say:'Moo!', foods:['hay','grass'], habitat:'barn/field', facts:['A baby cow is a calf.','Cows chew cud.','They give milk.']},
+  { key:'pig', name:'Pig', say:'Oink!', foods:['slop','corn'], habitat:'sty', facts:['Baby pigs are piglets.','They like mud.','Pigs are smart.']},
+  { key:'sheep', name:'Sheep', say:'Baa!', foods:['grass'], habitat:'field', facts:['A group is a flock.','Babies are lambs.','We get wool.']},
+  { key:'duck', name:'Duck', say:'Quack!', foods:['seeds','bugs'], habitat:'pond', facts:['Webbed feet.','Ducklings follow in a line.','They splash!']},
+  { key:'chicken', name:'Chicken', say:'Cluck!', foods:['corn','grains'], habitat:'coop', facts:['Baby chickens are chicks.','Roosters crow.','They peck food.']},
+  { key:'horse', name:'Horse', say:'Neigh!', foods:['hay','oats'], habitat:'stable', facts:['Babies are foals.','They wear shoes.','They run fast.']},
+  { key:'goat', name:'Goat', say:'Maa!', foods:['leaves','hay'], habitat:'pen', facts:['Babies are kids.','They climb.','They nibble.']},
+  { key:'dog', name:'Dog', say:'Woof!', foods:['kibble'], habitat:'farmhouse', facts:['Puppies are baby dogs.','Helpful pals.','Love to play.']},
+  { key:'cat', name:'Cat', say:'Meow!', foods:['fish','kibble'], habitat:'barnhouse', facts:['Kittens are baby cats.','They purr.','They chase mice.']},
+  { key:'rabbit', name:'Rabbit', say:'Hop!', foods:['carrots','greens'], habitat:'hutch', facts:['Babies are kits.','Long ears.','They thump.']},
+];
 
-  /* ===== DOM ===== */
-  
-/* ===== Path base autodetect for GitHub Pages / subfolders ===== */
+const SCENE_KEYS = ['barn','coop','pond','tree_01','tree_02','fence']; // extend as needed
+
+/* Persistent config (images provided by user) */
+const STORAGE_KEY = 'farmfun_assets_v1';
+let userAssets = loadAssets();  // { images: {cow: dataURL, ..., barn: dataURL}, meta:{...} }
+let parentMode = false;
+
+/* ====== AUDIO (optional real sounds) ====== */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let ctx, masterGain;
+const bank = {};  // key → [AudioBuffer]
+let quiet = false;
+
+function ensureAudio(){
+  if (ctx) return;
+  ctx = new AudioCtx();
+  masterGain = ctx.createGain();
+  masterGain.gain.value = .7;
+  masterGain.connect(ctx.destination);
+}
+function connectOut(node){ node.connect(masterGain); }
+async function tryFetch(url){
+  try{ const r = await fetch(url, {cache:'no-cache'}); return r.ok ? r : null; }catch(e){ return null; }
+}
+async function autoLoadAnimal(key){
+  const exts = ['wav','mp3','ogg'];
+  const bases = detectBases();
+  bank[key] = bank[key] || [];
+  for(let i=1;i<=6;i++){
+    for (const ext of exts){
+      const nameVar = [`${key}_${String(i).padStart(2,'0')}`,`${key}-${String(i).padStart(2,'0')}`,`${key}${i}`];
+      for(const baseName of nameVar){
+        for (const base of bases){
+          const url = joinPath(base, `assets/sfx/${key}/${baseName}.${ext}`);
+          const r = await tryFetch(url);
+          if (r){
+            const ab = await r.arrayBuffer();
+            const buf = await ctx.decodeAudioData(ab);
+            bank[key].push(buf);
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+function playSound(key){
+  if (!ctx) ensureAudio();
+  const list = bank[key]||[];
+  if (!list.length) return;
+  const src = ctx.createBufferSource();
+  src.buffer = list[(Math.random()*list.length)|0];
+  const g = ctx.createGain(); g.gain.value=0.95;
+  src.connect(g); connectOut(g);
+  const dur = Math.min(src.buffer.duration||2.5, 3.0);
+  const now = ctx.currentTime;
+  g.gain.setValueAtTime(0.95, now + Math.max(0, dur - .12));
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  src.start(); src.stop(now + dur + .02);
+}
+
+/* ====== PATH BASE DETECTION (GitHub Pages friendly) ====== */
 function joinPath(base, path){
   if (!base || base === '/') return path.replace(/^\/+/, '');
   return base.replace(/\/+$/,'/') + path.replace(/^\/+/, '');
 }
-const BASES = (() => {
-  // Try current directory first, then site root, then "/farm-fun/" variants.
+function detectBases(){
   const p = location.pathname;
   const baseDir = p.endsWith('/') ? p : p.replace(/[^/]+$/, '');
-  const set = new LinkedHashSet([
-    baseDir,            // e.g. /farm-fun/
-    '/',                // site root
-    baseDir + 'farm-fun/', // /farm-fun/farm-fun/ (just in case)
-    '/farm-fun/'       // explicit common repo name
-  ]);
-  // LinkedHashSet utility (preserve insertion order, dedupe)
-  function LinkedHashSet(arr){ const m=new Map(); arr.forEach(v=>m.set(v,true)); this.values=()=>[...m.keys()]; }
-  return set.values();
-})();
-async function tryFetchAnyBase(relPath, opts){
-  for (const base of BASES){
-    const url = joinPath(base, relPath);
-    try{
-      const r = await fetch(url, opts);
-      if (r.ok) return { ok:true, response:r, url };
-    }catch(_){}
-  }
-  return { ok:false, response:null, url: relPath };
+  const set = new Map();
+  [baseDir, '/', baseDir+'farm-fun/', '/farm-fun/'].forEach(x=>set.set(x,true));
+  return [...set.keys()];
 }
 
-  const gate = document.getElementById('gate');
-  const startBtn = document.getElementById('startBtn');
-  const stage = document.getElementById('stage');
-  const hint = document.getElementById('hint');
-  const fsBtn = document.getElementById('fsBtn');
-  const vol = document.getElementById('vol');
-  const quietBtn = document.getElementById('quietBtn');
-  const sillyBtn = document.getElementById('sillyBtn');
-  const cloudLayer = document.getElementById('cloudLayer');
-  const bookBtn = document.getElementById('bookBtn');
-  const book = document.getElementById('book');
-  const bookClose = document.getElementById('bookClose');
-  const bookMin = document.getElementById('bookMin');
-  const bookGrid = document.getElementById('bookGrid');
-  const bookContent = document.getElementById('bookContent');
+/* ====== ASSET PIPELINE ====== */
+function loadAssets(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { images:{}, meta:{} }; }
+  catch(_){ return { images:{}, meta:{} }; }
+}
+function saveAssets(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(userAssets)); }
+function clearAssets(){ localStorage.removeItem(STORAGE_KEY); userAssets = { images:{}, meta:{} }; }
 
-  /* ===== AUDIO ===== */
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  let ctx, masterGain, limiter, softLP, ambienceDelay, ambienceGain;
-  let quiet = false, sillyOn = true;
-  const bank = {}; let manifest = null; let currentNodes = [];
+/* Utility to show PNG thumb */
+function createThumb(name, dataURL){
+  const d = document.createElement('div'); d.className='thumb';
+  const img = document.createElement('img'); img.src=dataURL;
+  const cap = document.createElement('div'); cap.className='cap'; cap.textContent=name;
+  d.appendChild(img); d.appendChild(cap); return d;
+}
 
-  function ensureAudio(){
-    if (ctx) return;
-    ctx = new AudioCtx();
-    masterGain = ctx.createGain(); masterGain.gain.value = parseFloat(vol.value);
-    softLP = ctx.createBiquadFilter(); softLP.type='lowpass'; softLP.frequency.value=3200; softLP.Q.value=0.5;
-    limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value=-14; limiter.knee.value=18; limiter.ratio.value=8; limiter.attack.value=0.003; limiter.release.value=0.12;
-    ambienceDelay = ctx.createDelay(0.25); ambienceDelay.delayTime.value=0.07;
-    ambienceGain = ctx.createGain(); ambienceGain.gain.value=0.12;
-    masterGain.connect(softLP).connect(limiter).connect(ctx.destination);
-    softLP.connect(ambienceDelay).connect(ambienceGain).connect(limiter);
-  }
-  function connectOut(node){ node.connect(masterGain); node.connect(ambienceDelay); }
-  vol.addEventListener('input', () => { if(masterGain){ masterGain.gain.value = parseFloat(vol.value);} });
-  quietBtn.addEventListener('click', () => { quiet = !quiet; quietBtn.textContent = `Quiet: ${quiet?'On':'Off'}`; });
-  sillyBtn.addEventListener('click', () => { sillyOn = !sillyOn; sillyBtn.textContent = `Silly sound: ${sillyOn?'On':'Off'}`; });
+/* ====== VIEWS ====== */
+const view = document.getElementById('view');
+const tabs = [...document.querySelectorAll('.tab[data-view]')];
+tabs.forEach(t=> t.addEventListener('click', ()=>{ tabs.forEach(x=>x.classList.remove('primary')); t.classList.add('primary'); show(t.dataset.view)}));
 
-  function makeEnv(duration){
-    const g = ctx.createGain();
-    const now = ctx.currentTime;
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(0.9, now + Math.min(0.05, duration*0.2));
-    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    return g;
+function show(which){
+  view.innerHTML = '';
+  switch(which){
+    case 'book': return renderBook();
+    case 'guess': return renderGuess();
+    case 'eat': return renderEat();
+    case 'habitat': return renderHabitat();
+    case 'stickers': return renderStickers();
+    case 'story': return renderStory();
   }
-  function fallbackPlay(key, maxSec){
-    if (!sillyOn) return 0;
-    const d = Math.min(maxSec, 0.9);
-    const o=ctx.createOscillator(); o.type='triangle';
-    const g=makeEnv(d); o.connect(g); connectOut(g);
-    o.frequency.value = ({cow:120,pig:200,sheep:420,duck:600,chicken:520,horse:240,goat:380,dog:140,cat:360,rabbit:320}[key]||300);
-    o.start(); o.stop(ctx.currentTime+d);
-    currentNodes.push({src:o, gainNode:g});
-    setTimeout(()=>{ currentNodes = currentNodes.filter(n=>n.src!==o); }, (d+0.2)*1000);
-    return d;
-  }
-  function stopCurrentNodes(){
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    currentNodes.forEach(n=>{
-      try{
-        if (n.gainNode){
-          n.gainNode.gain.cancelScheduledValues(now);
-          n.gainNode.gain.setValueAtTime(n.gainNode.gain.value, now);
-          n.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-        }
-        n.src.stop(now + 0.13);
-      }catch(_){}
+}
+
+/* ---- Book ---- */
+function renderBook(){
+  const wrap = document.createElement('div'); wrap.className='card';
+  wrap.innerHTML = `<h2 style="margin:0 0 10px">Farm Book</h2><div class="book-grid" id="bookGrid"></div>`;
+  view.appendChild(wrap);
+  const grid = wrap.querySelector('#bookGrid');
+  DEFAULT_ANIMALS.forEach(a=>{
+    const tile = document.createElement('div'); tile.className='tile';
+    tile.innerHTML = `<div class="img">${imgFor(a.key,96)}</div><div class="nm">${a.name}</div>`;
+    tile.addEventListener('click', ()=>openProfile(a.key));
+    grid.appendChild(tile);
+  });
+}
+function imgFor(key, size=120){
+  const url = userAssets.images[key] || '';
+  if (url) return `<img alt="${key}" src="${url}" width="${size}" height="${size}">`;
+  // fallback SVG icon
+  const emoji = {cow:'🐮',pig:'🐷',sheep:'🐑',duck:'🦆',chicken:'🐔',horse:'🐴',goat:'🐐',dog:'🐶',cat:'🐱',rabbit:'🐰'}[key]||'🌾';
+  return `<div style="font-size:${Math.round(size*0.7)}px; line-height:1">${emoji}</div>`;
+}
+function openProfile(key){
+  const animal = DEFAULT_ANIMALS.find(a=>a.key===key);
+  if (!animal) return;
+  view.innerHTML='';
+  const card = document.createElement('div'); card.className='card profile';
+  card.innerHTML = `
+    <div class="bigimg">${imgFor(key, 360)}</div>
+    <div>
+      <h2 style="margin:0">${animal.name} <span class="pill"><strong>Sound:</strong> ${animal.say}</span></h2>
+      <div class="row" style="margin:10px 0 6px">
+        <button class="btn play" id="playBtn">Play Sound</button>
+        <button class="btn secondary" id="backBtn">Back to Book</button>
+      </div>
+      <p><strong>Home:</strong> ${animal.habitat}</p>
+      <p><strong>Food:</strong> ${animal.foods.join(', ')}</p>
+      <p><strong>Fun facts:</strong></p>
+      <ul class="fact">${animal.facts.map(f=>`<li>${f}</li>`).join('')}</ul>
+      ${parentMode ? `<div style="margin-top:10px"><span class="badge">Parent Tip</span> Ask your child to mimic the sound and count legs (1…2…3…4).</div>`:''}
+    </div>`;
+  view.appendChild(card);
+  card.querySelector('#playBtn').addEventListener('click', ()=>{ ensureAudio(); autoLoadAnimal(key).then(()=>playSound(key)); awardSticker(key); });
+  card.querySelector('#backBtn').addEventListener('click', ()=>show('book'));
+}
+
+/* ---- Sound & Guess ---- */
+function renderGuess(){
+  const state = { target: randomAnimal().key, options: pickOptions(3) };
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = `
+    <h2 style="margin:0 0 6px">Sound & Guess</h2>
+    <p>Listen, then tap the animal you hear.</p>
+    <button class="btn play" id="play">Play Sound</button>
+    <div class="choices" id="choices"></div>
+    <div id="msg" style="margin-top:8px; font-weight:800"></div>
+  `;
+  view.appendChild(card);
+  const ch = card.querySelector('#choices');
+  state.options.forEach(k=>{
+    const btn = document.createElement('div'); btn.className='choice';
+    btn.innerHTML = `<div class="img">${imgFor(k,120)}</div><div style="margin-top:6px; font-weight:800">${nameFromKey(k)}</div>`;
+    btn.addEventListener('click', ()=>{
+      if (k===state.target){ card.querySelector('#msg').innerHTML = `<span class="ok">Correct!</span>`; awardSticker(k); state.target = randomAnimal().key; setTimeout(()=>renderGuess(), 900); }
+      else { card.querySelector('#msg').innerHTML = `<span class="oops">Try again!</span>`; }
     });
-    currentNodes = [];
-  }
-
-  /* ===== Diagnostics UI ===== */
-  const diag = document.createElement('div'); diag.className = 'diag'; document.body.appendChild(diag);
-  const diagBtn = document.getElementById('diagBtn');
-  diagBtn.addEventListener('click', () => { diag.style.display = (diag.style.display==='none'?'block':'none'); if (diag.style.display==='block') diag.innerHTML = `<pre>${D.join('\n')}</pre>`; });
-  const D = [];  // logs
-  function logD(...a){ D.push(a.join(' ')); if (diag.style.display==='block') diag.innerHTML = `<pre>${D.join('\n')}</pre>`; }
-
-  /* ===== Sound manifest + robust auto-discovery ===== */
-  async function fetchManifest(){
-    try{
-      const res = await fetch('assets/sfx/manifest.json', {cache:'no-cache'});
-      if (!res.ok) throw new Error('manifest missing');
-      const m = await res.json();
-      logD('Loaded manifest.json');
-      return m;
-    }catch(e){
-      logD('No manifest.json found → using auto-discovery');
-      return null;
-    }
-  }
-
-  /* Broader patterns:
-     • cat_01.wav / cat-01.wav / cat01.wav / cat1.wav  (01..40)
-     • extensions tried in order: wav, mp3, ogg
-     • Doesn’t stop on gaps; builds any set that exists.
-  */
-  async function autoDiscoverForKey(key){
-    const patterns = [
-      (i) => `${key}_${i.toString().padStart(2,'0')}`,  // cat_01
-      (i) => `${key}-${i.toString().padStart(2,'0')}`,  // cat-01
-      (i) => `${key}${i.toString().padStart(2,'0')}`,   // cat01
-      (i) => `${key}_${i}`,                              // cat_1
-      (i) => `${key}-${i}`,                              // cat-1
-      (i) => `${key}${i}`,                               // cat1
-    ];
-    const exts = ['wav','mp3','ogg'];
-    const found = new Set();
-    for (let i=1; i<=40; i++){
-      for (const pat of patterns){
-        for (const ext of exts){
-          const base = pat(i);
-          const url = `assets/sfx/${key}/${base}.${ext}`;
-          try{
-            const r = await fetch(url, {cache:'no-cache'});
-            if (r.ok){ found.add(`${base}.${ext}`); logD('✓', key, '→', `${base}.${ext}`); break; }
-          }catch(_){}
-        }
-      }
-    }
-    if (!found.size) logD('×', key, 'no files found');
-    return Array.from(found);
-  }
-
-  async function decodeOne(key, file){
-    try{
-      const url = `assets/sfx/${key}/${file}`;
-      const r = await fetch(url, {cache:'no-cache'});
-      if (!r.ok) { logD('404', url); return false; }
-      const ab = await r.arrayBuffer();
-      const buf = await ctx.decodeAudioData(ab);
-      (bank[key] ||= []).push(buf);
-      return true;
-    }catch(err){
-      logD('decode fail', key, file, (err && err.message) || err);
-      return false;
-    }
-  }
-
-  async function decodeAll(){
-    ensureAudio();
-    const m = await fetchManifest();
-    if (m){ manifest = m; }
-
-    for (const a of animals){
-      bank[a.key] = [];
-      let list = [];
-      if (manifest && Array.isArray(manifest[a.key])) {
-        list = manifest[a.key];
-        logD('manifest list for', a.key, '→', JSON.stringify(list));
-      } else {
-        list = await autoDiscoverForKey(a.key);
-      }
-
-      for (const f of list){ await decodeOne(a.key, f); }
-      logD('Loaded buffers for', a.key, ':', (bank[a.key]||[]).length);
-    }
-
-    // Summary
-    const sum = animals.map(a => `${a.key}:${(bank[a.key]||[]).length}`).join('  ');
-    logD('SUMMARY', sum);
-  }
-
-  function playAnimalSound(key){
-    if (!ctx) ensureAudio();
-    if (quiet) return 0;
-    stopCurrentNodes(); // newest wins
-    const list = bank[key] || [];
-    const maxDur = 3.0;
-    if (list.length){
-      const buf = list[(Math.random()*list.length)|0];
-      const src = ctx.createBufferSource(); src.buffer = buf;
-      const g = ctx.createGain(); g.gain.value = 0.95;
-      src.connect(g); connectOut(g);
-      const now = ctx.currentTime;
-      const playDur = Math.min(buf.duration || maxDur, maxDur);
-      g.gain.setValueAtTime(0.95, now + Math.max(0, playDur - 0.15));
-      g.gain.exponentialRampToValueAtTime(0.0001, now + playDur);
-      src.start(); src.stop(now + playDur + 0.02);
-      currentNodes.push({src, gainNode:g});
-      setTimeout(()=>{ currentNodes = currentNodes.filter(n=>n.src!==src); }, (playDur+0.2)*1000);
-      return playDur;
-    }
-    return fallbackPlay(key, maxDur);
-  }
-
-  /* ===== Pops: non-overlap + max 6 ===== */
-  const MAX_POP = 6;
-  const activePops = []; // {el,x,y,r}
-  function circlesOverlap(a,b){ const dx=a.x-b.x, dy=a.y-b.y; const rr=(a.r+b.r); return dx*dx+dy*dy < rr*rr; }
-  function placeNonOverlapping(){
-    const r = Math.max(90, Math.min(140, Math.min(innerWidth, innerHeight)*0.12));
-    const area = { x0: innerWidth*0.1, x1: innerWidth*0.9, y0: innerHeight*0.22, y1: innerHeight*0.68 };
-    for (let tries=0; tries<18; tries++){
-      const x = area.x0 + Math.random()*(area.x1-area.x0);
-      const y = area.y0 + Math.random()*(area.y1-area.y0);
-      const candidate = {x,y,r};
-      if (!activePops.some(p => circlesOverlap(p, candidate))) return candidate;
-    }
-    return null;
-  }
-  function removeOldest(){
-    if (!activePops.length) return;
-    const oldest = activePops.shift();
-    const bubble = oldest.el.querySelector('.bubble');
-    bubble.classList.remove('enter'); bubble.classList.add('exit');
-    setTimeout(()=> oldest.el.remove(), 820);
-  }
-
-  function burst(x,y,hue){
-    const n = 10;
-    for(let i=0;i<n;i++){
-      const d = document.createElement('div');
-      d.className = 'confetti';
-      d.style.left=(x)+'px'; d.style.top=(y)+'px'; d.style.position='fixed';
-      d.style.background = `hsl(${hue}, 80%, ${60+Math.random()*20}%)`;
-      d.style.opacity = 0.95;
-      const size = 10 + Math.random()*10; d.style.width = d.style.height = size+'px';
-      document.body.appendChild(d);
-      const ang = Math.random()*Math.PI*2, dist = 60+Math.random()*110;
-      const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist;
-      const ms = 1200 + Math.random()*600;
-      d.animate([{transform:'translate(0,0) scale(1)', opacity:1},{transform:`translate(${dx}px,${dy}px) scale(0.85)`, opacity:0}], {duration: ms, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards'});
-      setTimeout(()=>d.remove(), ms+120);
-    }
-  }
-  function popAnimalAt(x, y){
-    let pos = {x, y};
-    const found = placeNonOverlapping();
-    if (found) pos = found;
-    else {
-      if (activePops.length >= MAX_POP) { removeOldest(); const retry = placeNonOverlapping(); if (retry) pos = retry; }
-      else return;
-    }
-    const a = animals[(Math.random()*animals.length)|0];
-    playAnimalSound(a.key);
-
-    const node = document.createElement('div');
-    node.className = 'pop';
-    node.style.left = pos.x + 'px';
-    node.style.top  = pos.y + 'px';
-
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble enter';
-    bubble.style.borderRadius = 22 + Math.random()*12 + 'px';
-    bubble.style.filter = `drop-shadow(0 16px 28px var(--shadow))`;
-    bubble.style.borderColor = `hsla(${a.hue},70%,35%,.18)`;
-    bubble.style.boxShadow += `, 0 0 0 10px hsla(${a.hue}, 90%, 80%, .22) inset`;
-
-    const emoji = document.createElement('div'); emoji.className = 'emoji'; emoji.textContent = a.emoji;
-    const name  = document.createElement('div'); name.className  = 'name';  name.textContent = a.name;
-    const onom  = document.createElement('div'); onom.className  = 'onom';  onom.textContent = a.say;
-
-    bubble.appendChild(emoji); bubble.appendChild(name); bubble.appendChild(onom);
-    node.appendChild(bubble);
-    stage.appendChild(node);
-
-    if (activePops.length >= MAX_POP) removeOldest();
-    const r = Math.max(90, Math.min(140, Math.min(innerWidth, innerHeight)*0.12));
-    activePops.push({el:node, x:pos.x, y:pos.y, r});
-
-    burst(pos.x, pos.y, a.hue);
-
-    setTimeout(() => {
-      bubble.classList.remove('enter');
-      bubble.classList.add('exit');
-      setTimeout(()=> {
-        node.remove();
-        const i = activePops.findIndex(p => p.el===node);
-        if (i>=0) activePops.splice(i,1);
-      }, 800);
-    }, 3000);
-  }
-
-  /* ===== Farm Book: input lock ===== */
-  let inputLocked = false;
-  function openBook(){ inputLocked = true; book.style.display='flex'; }
-  function hideBook(){ book.style.display='none'; inputLocked = false; }
-
-  /* ===== Input handlers (guarded) ===== */
-  function triggerFromEvent(e){
-    if (inputLocked) return;
-    const isPointer = ('clientX' in e);
-    if (isPointer) popAnimalAt(e.clientX, e.clientY);
-    else {
-      const slot = placeNonOverlapping();
-      if (slot) popAnimalAt(slot.x, slot.y);
-      else if (activePops.length >= MAX_POP) { removeOldest(); const retry = placeNonOverlapping(); if (retry) popAnimalAt(retry.x, retry.y); }
-    }
-  }
-
-  /* ===== Start, FS, context menu ===== */
-  async function begin(){
-    ensureAudio();
-    await decodeAll(); // auto-load wav/mp3/ogg (manifest if present)
-    gate.style.display='none';
-    hint.style.opacity = 0.75;
-    setTimeout(()=>hint.remove(), 2200);
-    const slot = placeNonOverlapping(); if (slot) popAnimalAt(slot.x, slot.y);
-  }
-  startBtn.addEventListener('click', begin);
-  window.addEventListener('pointerdown', (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
-  window.addEventListener('keydown',   (e) => { if (gate.style.display !== 'none') begin(); triggerFromEvent(e); }, {passive:true});
-  fsBtn.addEventListener('click', async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch {} });
-  window.addEventListener('contextmenu', e => e.preventDefault());
-
-  /* ===== Handle rotation/resize: tidy bubbles that went offscreen ===== */
-  function clampActiveToViewport(){
-    for (const p of activePops){
-      const r = p.r;
-      p.x = Math.max(r, Math.min(innerWidth - r, p.x));
-      p.y = Math.max(r, Math.min(innerHeight - r, p.y));
-      p.el.style.left = p.x + 'px';
-      p.el.style.top  = p.y + 'px';
-    }
-  }
-  window.addEventListener('resize', clampActiveToViewport);
-  window.addEventListener('orientationchange', () => {
-    setTimeout(clampActiveToViewport, 150); // wait for iOS reflow
+    ch.appendChild(btn);
   });
+  card.querySelector('#play').addEventListener('click', ()=>{ ensureAudio(); autoLoadAnimal(state.target).then(()=>playSound(state.target)); });
+}
 
-  /* ===== Book UI wiring (plays audio on click) ===== */
-  animals.forEach(a=>{
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-    tile.tabIndex = 0;
-    tile.innerHTML = `<div class="emo">${a.emoji}</div><div class="nm">${a.name}</div>`;
-    const show = ()=>{
-      const data = BOOK[a.key] || {title:a.name,intro:"This is a friendly farm animal.",habitat:"On the farm.",facts:["It makes a fun sound!"]};
-      bookContent.innerHTML = `
-        <h2>${a.emoji} ${data.title}</h2>
-        <p>${data.intro}</p>
-        <p><strong>Home:</strong> ${data.habitat}</p>
-        <p><strong>Sound:</strong> “${a.say}”</p>
-        <p><strong>Fun facts:</strong></p>
-        <ul>${data.facts.map(f=>`<li>${f}</li>`).join('')}</ul>
-        <p style="margin-top:12px; opacity:.8">Tip: With a grown-up, tap the screen to hear the sound.</p>
-      `;
-      ensureAudio();
-      playAnimalSound(a.key);
-    };
-    tile.addEventListener('click', show);
-    tile.addEventListener('keydown', (ev)=>{ if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); show(); } });
-    bookGrid.appendChild(tile);
+/* ---- What Do I Eat? (drag & drop) ---- */
+function renderEat(){
+  const animal = randomAnimal();
+  const foodsUnique = uniq(DEFAULT_ANIMALS.flatMap(a=>a.foods));
+  const wrong = foodsUnique.filter(f=>!animal.foods.includes(f)).sort(()=>Math.random()-0.5).slice(0,3);
+  const options = shuffle([...animal.foods, ...wrong]).slice(0,4);
+
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = `
+    <h2 style="margin:0 0 6px">What Do I Eat?</h2>
+    <div class="grid cols-2">
+      <div class="bigimg"><div>${imgFor(animal.key, 260)}</div><div style="margin-top:8px; font-weight:800; text-align:center">${animal.name}</div></div>
+      <div>
+        <div class="dropzone" id="dz">Drop the foods here</div>
+        <div class="foods" id="foods"></div>
+        <div id="msg" style="margin-top:8px; font-weight:800"></div>
+      </div>
+    </div>`;
+  view.appendChild(card);
+  const dz = card.querySelector('#dz');
+  const foods = card.querySelector('#foods');
+  makeDZ(dz);
+  options.forEach(f=>{
+    const el = document.createElement('div'); el.className='food'; el.textContent = f; el.draggable=true;
+    el.addEventListener('dragstart', e=> e.dataTransfer.setData('text/plain', f));
+    foods.appendChild(el);
   });
-  bookBtn.addEventListener('click', openBook);
-  bookClose.addEventListener('click', hideBook);
-  bookMin.addEventListener('click', hideBook);
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && book.style.display === 'flex') hideBook(); }, {passive:true});
+  dz.addEventListener('drop', e=>{
+    const f = e.dataTransfer.getData('text/plain');
+    if (animal.foods.includes(f)){ card.querySelector('#msg').innerHTML = `<span class="ok">Yes! ${animal.name} eats ${f}.</span>`; awardSticker(animal.key); setTimeout(()=>renderEat(), 900); }
+    else { card.querySelector('#msg').innerHTML = `<span class="oops">Not usually. Try again!</span>`; }
+  });
+}
 
-  /* ===== Procedural clouds ===== */
-  function spawnCloud(){
-    const types = ['blob','wispy','puffy'];
-    const div = document.createElement('div');
-    div.className = 'cloud';
-    const type = types[(Math.random()*types.length)|0];
-    const inner = document.createElement('div'); inner.className = type;
-    const scale = 0.7 + Math.random()*1.4;
-    div.style.transform = `translateX(-20vw) translateY(${(Math.random()*18)-6}vh) scale(${scale})`;
-    const min = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMin'));
-    const max = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cloudMax'));
-    const dur = min + Math.random()*(max-min);
-    div.style.animation = `wind-x ${dur}s linear forwards`;
-    inner.style.animation = `wind-y ${8+Math.random()*10}s ease-in-out infinite`;
-    div.appendChild(inner);
-    cloudLayer.appendChild(div);
-    setTimeout(()=>div.remove(), dur*1000 + 2000);
+/* ---- Habitat Explorer ---- */
+function renderHabitat(){
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = `<h2 style="margin:0 0 6px">Habitat Explorer</h2>
+    <div class="hab" id="hab" style="height: clamp(280px, 48vh, 520px)">
+      ${sceneImg('barn', 'left:8%; bottom:8%; width:22%')}
+      ${sceneImg('coop', 'left:30%; bottom:8%; width:18%')}
+      ${sceneImg('pond', 'right:12%; bottom:6%; width:26%')}
+      ${sceneImg('tree_01', 'left:6%; top:8%; width:10%')}
+      ${sceneImg('tree_02', 'right:8%; top:6%; width:10%')}
+      <div class="zone" data-hab="barn"   style="left:8%; bottom:8%; width:22%; height:24%"></div>
+      <div class="zone" data-hab="coop"   style="left:30%; bottom:8%; width:18%; height:22%"></div>
+      <div class="zone" data-hab="pond"   style="right:12%; bottom:6%; width:26%; height:24%"></div>
+      <div class="zone" data-hab="field"  style="left:52%; bottom:14%; width:20%; height:18%"></div>
+    </div>
+    <div id="out" style="margin-top:8px; font-weight:800"></div>`;
+  view.appendChild(card);
+  card.querySelectorAll('.zone').forEach(z=>{
+    z.addEventListener('click', ()=>{
+      const hab = z.dataset.hab;
+      const hits = DEFAULT_ANIMALS.filter(a=> (a.habitat||'').includes(hab) || (hab==='field' && a.habitat.includes('field')));
+      const out = hits.length ? hits.map(a=>a.name).join(', ') : 'No animals here';
+      card.querySelector('#out').textContent = `Here you’ll find: ${out}`;
+    });
+  });
+}
+function sceneImg(key, style){
+  const url = userAssets.images[key];
+  if (!url) return '';
+  return `<img src="${url}" alt="${key}" style="position:absolute; ${style}; pointer-events:none">`;
+}
+
+/* ---- Sticker Board ---- */
+function renderStickers(){
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = `
+    <h2 style="margin:0 0 6px">Sticker Board</h2>
+    <div class="sticker-board" id="board">
+      ${sceneImg('barn', 'left:6%; bottom:6%; width:22%')}
+      ${sceneImg('coop', 'left:30%; bottom:6%; width:18%')}
+      ${sceneImg('pond', 'right:12%; bottom:6%; width:26%')}
+    </div>
+    <div class="stickers" id="palette"></div>
+    <div style="margin-top:10px" class="row">
+      <button class="btn secondary" id="clearPlaced">Clear Board</button>
+    </div>`;
+  view.appendChild(card);
+  const pal = card.querySelector('#palette');
+  ownedStickers().forEach(k=>{
+    const s = document.createElement('div'); s.className='sticker'; s.innerHTML = imgFor(k, 80);
+    s.draggable=true;
+    s.addEventListener('dragstart', e=> e.dataTransfer.setData('text/plain', k));
+    pal.appendChild(s);
+  });
+  const board = card.querySelector('#board');
+  board.addEventListener('dragover', e=>{ e.preventDefault(); });
+  board.addEventListener('drop', e=>{
+    e.preventDefault();
+    const k = e.dataTransfer.getData('text/plain');
+    if (!k) return;
+    const el = document.createElement('div'); el.className='placed'; el.innerHTML = imgFor(k, 100);
+    el.style.left = e.offsetX + 'px'; el.style.top = e.offsetY + 'px';
+    makeDraggable(el, board);
+    board.appendChild(el);
+  });
+  card.querySelector('#clearPlaced').addEventListener('click', ()=>{ [...board.querySelectorAll('.placed')].forEach(x=>x.remove()); });
+}
+
+/* ---- Mini Story ---- */
+function renderStory(){
+  const steps = [
+    {img:'barn', text:'Good morning! The sun is up on the farm.'},
+    {img:'coop', text:'The chickens cluck, “Good day!”'},
+    {img:'pond', text:'At the pond, ducks go “quack, quack!”'},
+    {img:'cow', text:'Cow says “moo!” It’s breakfast time.'},
+  ];
+  let i=0;
+  const card = document.createElement('div'); card.className='card story';
+  card.innerHTML = `
+    <div class="story-slide">
+      <div class="img" id="simg">${storyImg(steps[i].img)}</div>
+      <div><h3 id="stxt" style="margin:0 0 10px">${steps[i].text}</h3>
+        <div class="row"><button class="btn play" id="next">Next</button>
+        <button class="btn secondary" id="repeat">Repeat</button></div>
+      </div>
+    </div>`;
+  view.appendChild(card);
+  function setStep(){
+    card.querySelector('#simg').innerHTML = storyImg(steps[i].img);
+    card.querySelector('#stxt').textContent = steps[i].text;
   }
-  setInterval(()=>{ if (document.hidden) return; if (cloudLayer.childElementCount < 8) spawnCloud(); }, 2500);
-  for(let i=0;i<5;i++) spawnCloud();
+  card.querySelector('#next').addEventListener('click', ()=>{ i=(i+1)%steps.length; setStep(); });
+  card.querySelector('#repeat').addEventListener('click', setStep);
+}
+function storyImg(key){ return userAssets.images[key] ? `<img src="${userAssets.images[key]}">` : imgFor(key, 280); }
 
-  /* ===== High-quality scene images (optional) with graceful fallback ===== */
-  const IMG_MAP = {
-    imgBarn:        'assets/img/barn.png',
-    imgWindmill:    'assets/img/windmill.png',
-    imgCoopChicken: 'assets/img/coop_chicken.png',
-    imgCoopDuck:    'assets/img/coop_duck.png'
+/* ===== helpers ===== */
+function randomAnimal(){ return DEFAULT_ANIMALS[(Math.random()*DEFAULT_ANIMALS.length)|0]; }
+function nameFromKey(k){ return DEFAULT_ANIMALS.find(a=>a.key===k)?.name || k; }
+function shuffle(a){ return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]); }
+function uniq(a){ return [...new Set(a)]; }
+function pickOptions(n){
+  const target = randomAnimal().key;
+  const all = DEFAULT_ANIMALS.map(a=>a.key).filter(k=>k!==target);
+  const others = shuffle(all).slice(0, n-1);
+  return shuffle([target, ...others]);
+}
+function makeDZ(el){
+  el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('dz-hit'); });
+  el.addEventListener('dragleave', ()=> el.classList.remove('dz-hit'));
+  el.addEventListener('drop', e=>{ e.preventDefault(); el.classList.remove('dz-hit'); handleFiles(e.dataTransfer.files); });
+}
+function makeDraggable(el, container){
+  let dragging=false, ox=0, oy=0;
+  el.addEventListener('pointerdown', e=>{ dragging=true; ox=e.clientX- el.offsetLeft; oy=e.clientY - el.offsetTop; el.setPointerCapture(e.pointerId); });
+  el.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const x = Math.max(0, Math.min(container.clientWidth, e.clientX-ox));
+    const y = Math.max(0, Math.min(container.clientHeight, e.clientY-oy));
+    el.style.left=x+'px'; el.style.top=y+'px';
+  });
+  el.addEventListener('pointerup', ()=> dragging=false);
+}
+
+/* ====== BUILDER ====== */
+const builder = document.getElementById('builder');
+document.getElementById('openBuilder').addEventListener('click', ()=>{ builder.style.display='flex'; renderBuilder(); });
+document.getElementById('closeBuilder').addEventListener('click', ()=> builder.style.display='none');
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+dropZone.addEventListener('click', ()=> fileInput.click());
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('dz-hit'); });
+dropZone.addEventListener('dragleave', ()=> dropZone.classList.remove('dz-hit'));
+dropZone.addEventListener('drop', e=>{ e.preventDefault(); dropZone.classList.remove('dz-hit'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e=> handleFiles(e.target.files));
+
+function handleFiles(list){
+  const files = [...list].filter(f=>/\.png$/i.test(f.name));
+  Promise.all(files.map(f=>readAsDataURL(f).then(dataURL=>{
+    const base = f.name.replace(/\.png$/i,'').toLowerCase(); // e.g., cow, barn, tree_01
+    userAssets.images[base] = dataURL;
+  }))).then(()=> renderBuilder());
+}
+function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+
+function renderBuilder(){
+  // previews
+  const prevA = document.getElementById('prevAnimals'); prevA.innerHTML='';
+  DEFAULT_ANIMALS.forEach(a=>{
+    const key = a.key;
+    const src = userAssets.images[key];
+    prevA.appendChild(createThumb(key, src || placeholderData(key)));
+  });
+  const prevS = document.getElementById('prevScene'); prevS.innerHTML='';
+  SCENE_KEYS.forEach(k=>{
+    const src = userAssets.images[k];
+    if (src) prevS.appendChild(createThumb(k, src));
+  });
+  document.getElementById('jsonDump').textContent = JSON.stringify(userAssets, null, 2);
+}
+document.getElementById('saveAssets').addEventListener('click', ()=>{ saveAssets(); renderBuilder(); alert('Saved to browser.'); });
+document.getElementById('clearAssets').addEventListener('click', ()=>{ if(confirm('Remove saved assets?')){ clearAssets(); renderBuilder(); } });
+
+/* ===== EXPORT BUILD =====
+   Generates a single-file HTML with user images embedded as data-URLs.
+   In the export, the Builder is disabled by default for a “publish” build.
+*/
+document.getElementById('exportBuild').addEventListener('click', ()=>{
+  const pkg = {
+    images: userAssets.images,
+    meta: {} // reserved for future (copy, localised text, etc.)
   };
-  async function useSceneImages(){
-    await Promise.all(Object.entries(IMG_MAP).map(async ([id, url])=>{
-      const el = document.getElementById(id);
-      if (!el) return;
+  const html = buildExportHTML(pkg);
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'farm-app-export.html';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* Build export: embeds lightweight runtime + your images */
+function buildExportHTML(pkg){
+  const data = JSON.stringify(pkg);
+  return `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Farm Fun — Build</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;background:#f3f4f6;color:#111827}
+.wrap{max-width:920px;margin:24px auto;padding:0 14px}
+.card{background:#fff;border-radius:14px;box-shadow:0 14px 40px #0003;padding:16px}
+.btn{border:0;border-radius:10px;padding:12px 14px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #0002}
+.btn.primary{background:#111827;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.tile{background:#f8fafc;border-radius:12px;padding:8px;display:grid;place-items:center}
+.tile img{max-width:100%;max-height:120px;object-fit:contain}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1 style="margin:0 0 8px">Farm Fun</h1>
+    <p style="margin:0 0 10px">This is your exported build. The Builder is disabled. Assets are embedded.</p>
+    <button class="btn primary" id="launch">Launch App</button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3 style="margin:0 0 8px">Embedded Asset Preview</h3>
+    <div class="grid" id="prev"></div>
+  </div>
+</div>
+<script>
+  const EMBED = ${data};
+  const prev = document.getElementById('prev');
+  Object.entries(EMBED.images).forEach(([k,v])=>{
+    const d=document.createElement('div');d.className='tile';d.innerHTML='<div>'+k+'</div><img src="'+v+'">';prev.appendChild(d);
+  });
+  document.getElementById('launch').addEventListener('click',()=>{
+    // Minimal runtime that loads EMBED.images into the app and hides builder.
+    const w = window.open('','_blank');
+    w.document.write('<!DOCTYPE html>'+document.documentElement.outerHTML);
+    w.document.close();
+    w.addEventListener('load', ()=>{
       try{
-        const r = await fetch(url, {cache:'force-cache'});
-        if (!r.ok) return;
-        const blob = await r.blob();
-        el.src = URL.createObjectURL(blob);
-        el.style.display = 'block';
-        const fallback = el.parentElement.querySelector('svg.fallback');
-        if (fallback) fallback.style.display = 'none';
-        if (el.id === 'imgCoopChicken') el.closest('.coop.chicken')?.classList.add('has-img');
-        if (el.id === 'imgCoopDuck')    el.closest('.coop.duck')?.classList.add('has-img');
-      }catch(_){ /* keep fallback */ }
-    }));
-  }
-  startBtn.addEventListener('click', useSceneImages, { once:true });
-})();
+        w.localStorage.setItem('${STORAGE_KEY}', JSON.stringify({images: EMBED.images, meta:{}}));
+      }catch(_){}
+      // Remove Builder triggers
+      const ob = w.document.getElementById('openBuilder'); if (ob) ob.style.display='none';
+    }, {once:true});
+  });
 </script>
+</body></html>`;
+}
 
-<!--
-  SOUND LIBRARY (auto-discovery; manifest optional):
-  Place files like:
-    assets/sfx/cat/cat_01.wav
-    assets/sfx/cat/cat-02.mp3
-    assets/sfx/cat/cat1.ogg
-  Works for indexes 1..40; wav → mp3 → ogg priority; lowercase paths.
+/* Placeholder (emoji raster) if no user image yet */
+function placeholderData(key){
+  // Tiny canvas data URL so previews look consistent
+  const e = {cow:'🐮',pig:'🐷',sheep:'🐑',duck:'🦆',chicken:'🐔',horse:'🐴',goat:'🐐',dog:'🐶',cat:'🐱',rabbit:'🐰'}[key]||'🌾';
+  const c = document.createElement('canvas'); c.width=256; c.height=256;
+  const g = c.getContext('2d'); g.fillStyle='#f1f5f9'; g.fillRect(0,0,256,256);
+  g.font='180px serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(e,128,140);
+  return c.toDataURL('image/png');
+}
 
-  If you prefer explicit control, add:
-  assets/sfx/manifest.json
-  {
-    "cat": ["cat_01.wav","cat_02.wav"],
-    "dog": ["dog_01.mp3"]
-  }
--->
+/* ====== Parent Mode (long-press logo) ====== */
+const logo = document.getElementById('logo');
+let pressT=null;
+logo.addEventListener('pointerdown', ()=>{ pressT = setTimeout(()=>{ parentMode = !parentMode; document.getElementById('pmBadge').style.display = parentMode?'inline-flex':'none'; }, 900); });
+logo.addEventListener('pointerup', ()=>{ if (pressT){ clearTimeout(pressT); pressT=null; }});
+
+/* ====== INIT ====== */
+tabs[0].click(); // show Book by default
+</script>
 </body>
 </html>
